@@ -25,7 +25,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 export interface NodeSpec<I = unknown, O = unknown> {
   id: NodeId;
@@ -113,7 +115,10 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
 
     const files = [
       { path: `${root}/lib/trpc.tsx`, content: libTrpc },
-      { path: `${root}/_patches/app_providers_trpc_injection.diff`, content: patch },
+      {
+        path: `${root}/_patches/app_providers_trpc_injection.diff`,
+        content: patch,
+      },
     ];
     for (const f of files) {
       await ctx.storage.saveArtifact(f.path, f.content);

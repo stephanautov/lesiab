@@ -4,7 +4,12 @@ import { promises as fs } from "fs";
 import * as path from "path";
 
 async function exists(p: string) {
-  try { await fs.stat(p); return true; } catch { return false; }
+  try {
+    await fs.stat(p);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function copyDir(src: string, dst: string, force = false) {
@@ -34,7 +39,9 @@ async function main() {
   const src = path.resolve(`artifacts/${orcId}/repo`);
   const dst = path.resolve(".");
   if (!(await exists(src))) {
-    console.error(`Artifacts not found at ${src}. Run scripts/dev-run.ts first.`);
+    console.error(
+      `Artifacts not found at ${src}. Run scripts/dev-run.ts first.`,
+    );
     process.exit(1);
   }
   console.log(`Materializing from ${src} -> ${dst} ${force ? "(force)" : ""}`);

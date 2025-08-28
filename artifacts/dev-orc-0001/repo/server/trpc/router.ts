@@ -4,7 +4,7 @@ import { createTRPCRouter, publicProcedure } from "./_trpc";
 // hygen:routers-import
 
 const healthRouter = createTRPCRouter({
-  ping: publicProcedure.query(() => "pong")
+  ping: publicProcedure.query(() => "pong"),
 });
 
 export const appRouter = createTRPCRouter({

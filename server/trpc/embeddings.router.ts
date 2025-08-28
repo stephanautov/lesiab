@@ -15,29 +15,34 @@ function stableId(text: string) {
 
 export const embeddingsRouter = createTRPCRouter({
   enqueue: protectedProcedure
-    .input(z.object({
-      text: z.string().min(1),
-      table: z.string().min(1).default("embeddings_index"),
-      id: z.string().uuid().optional(),         // optional record id to upsert
-      vectorColumn: z.string().min(1).default("embedding"),
-      contentColumn: z.string().min(1).default("content")
-    }))
+    .input(
+      z.object({
+        text: z.string().min(1),
+        table: z.string().min(1).default("embeddings_index"),
+        id: z.string().uuid().optional(), // optional record id to upsert
+        vectorColumn: z.string().min(1).default("embedding"),
+        contentColumn: z.string().min(1).default("content"),
+      }),
+    )
     .mutation(async ({ input }) => {
       const jobId = input.id ?? stableId(input.text);
-      const url = new URL("/functions/v1/embeddings", process.env.SUPABASE_URL!);
+      const url = new URL(
+        "/functions/v1/embeddings",
+        process.env.SUPABASE_URL!,
+      );
       const res = await fetch(url.toString(), {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "authorization": `Bearer ${process.env.SUPABASE_SERVICE_ROLE!}`
+          authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE!}`,
         },
         body: JSON.stringify({
           jobId,
           text: input.text,
           table: input.table,
           vectorColumn: input.vectorColumn,
-          contentColumn: input.contentColumn
-        })
+          contentColumn: input.contentColumn,
+        }),
       });
       if (!res.ok) {
         const t = await res.text().catch(() => "");

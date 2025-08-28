@@ -37,76 +37,78 @@ import DeployDocs from "../nodes/deploy.docs";
 // Minimal ExecutionContext
 const storage = createFsStorage();
 const logger = {
-    info: (m: any) => console.log("[info]", m),
-    warn: (m: any) => console.warn("[warn]", m),
-    error: (m: any) => console.error("[error]", m),
+  info: (m: any) => console.log("[info]", m),
+  warn: (m: any) => console.warn("[warn]", m),
+  error: (m: any) => console.error("[error]", m),
 };
 
 const orchestrationId = process.env.ORC_ID ?? "dev-orc-0001";
 const correlationId = "dev-run-0001";
 
 async function run() {
-    const ctx = { orchestrationId, correlationId, logger, storage };
+  const ctx = { orchestrationId, correlationId, logger, storage };
 
-    // --- Batch 0: profile.normalize ---
-    // If your input is unintelligible, the node defaults to an "app" profile.
-    const profileInput =
-        process.env.PROFILE_JSON ??
-        `{"id":"app","version":"1.0.0","entities":[],"routes":[],"llm":{"providerPreference":"openai","useLangGraph":true}}`;
-    await ProfileNormalizeNode.run(profileInput, ctx);
+  // --- Batch 0: profile.normalize ---
+  // If your input is unintelligible, the node defaults to an "app" profile.
+  const profileInput =
+    process.env.PROFILE_JSON ??
+    `{"id":"app","version":"1.0.0","entities":[],"routes":[],"llm":{"providerPreference":"openai","useLangGraph":true}}`;
+  await ProfileNormalizeNode.run(profileInput, ctx);
 
-    // --- Batch 1: repo.scaffold ---
-    await RepoScaffoldNode.run({ profile: { id: "app", version: "1.0.0" } }, ctx);
+  // --- Batch 1: repo.scaffold ---
+  await RepoScaffoldNode.run({ profile: { id: "app", version: "1.0.0" } }, ctx);
 
-    // --- Batch 2: env.schema, ui.shadcn.init, client.state.install, forms.rhf.setup, ui.datatable ---
-    await EnvSchemaNode.run({}, ctx);
-    await UiShadcnInitNode.run({}, ctx);
-    await ClientStateInstallNode.run({}, ctx);
-    await FormsRHFSetupNode.run({}, ctx);
-    await UiDataTableNode.run({}, ctx);
+  // --- Batch 2: env.schema, ui.shadcn.init, client.state.install, forms.rhf.setup, ui.datatable ---
+  await EnvSchemaNode.run({}, ctx);
+  await UiShadcnInitNode.run({}, ctx);
+  await ClientStateInstallNode.run({}, ctx);
+  await FormsRHFSetupNode.run({}, ctx);
+  await UiDataTableNode.run({}, ctx);
 
-    // --- Batch 3: sa.init ---
-    await SaInitNode.run({}, ctx);
+  // --- Batch 3: sa.init ---
+  await SaInitNode.run({}, ctx);
 
-    // --- Batch 4: db.schema, auth.setup, storage.buckets ---
-    await DbSchemaNode.run({ profile: { id: "app", version: "1.0.0", entities: [] } }, ctx);
-    await AuthSetupNode.run({}, ctx);
-    await StorageBucketsNode.run({}, ctx);
+  // --- Batch 4: db.schema, auth.setup, storage.buckets ---
+  await DbSchemaNode.run(
+    { profile: { id: "app", version: "1.0.0", entities: [] } },
+    ctx,
+  );
+  await AuthSetupNode.run({}, ctx);
+  await StorageBucketsNode.run({}, ctx);
 
-    // --- Batch 5: sa.rls, realtime.channels, cron.queue.setup, edge.functions ---
-    await SaRlsNode.run({ profile: { entities: [] } }, ctx);
-    await RealtimeChannelsNode.run({}, ctx);
-    await CronQueueSetupNode.run({}, ctx);
-    await EdgeFunctionsNode.run({}, ctx);
+  // --- Batch 5: sa.rls, realtime.channels, cron.queue.setup, edge.functions ---
+  await SaRlsNode.run({ profile: { entities: [] } }, ctx);
+  await RealtimeChannelsNode.run({}, ctx);
+  await CronQueueSetupNode.run({}, ctx);
+  await EdgeFunctionsNode.run({}, ctx);
 
-    // --- Batch 6: trpc.server, rest.public ---
-    await TrpcServer.run({}, ctx);
-    await RestPublic.run({}, ctx);
+  // --- Batch 6: trpc.server, rest.public ---
+  await TrpcServer.run({}, ctx);
+  await RestPublic.run({}, ctx);
 
-    // --- Batch 7: trpc.client, next.app.router, upload.direct, ai.openai.setup, ai.anthropic.setup ---
-    await TrpcClientNode.run({}, ctx);
-    await NextAppRouterNode.run({}, ctx);
-    await UploadDirectNode.run({}, ctx);
-    await AiOpenaiSetupNode.run({}, ctx);
-    await AiAnthropicSetupNode.run({}, ctx);
+  // --- Batch 7: trpc.client, next.app.router, upload.direct, ai.openai.setup, ai.anthropic.setup ---
+  await TrpcClientNode.run({}, ctx);
+  await NextAppRouterNode.run({}, ctx);
+  await UploadDirectNode.run({}, ctx);
+  await AiOpenaiSetupNode.run({}, ctx);
+  await AiAnthropicSetupNode.run({}, ctx);
 
-    // --- Batch 8: ai.langgraph.flow, ai.embedder, realtime.client, ui.screens ---
-    await AiLanggraphFlowNode.run({}, ctx);
-    await AiEmbedderNode.run({}, ctx);
-    await RealtimeClientNode.run({}, ctx);
-    await UiScreensNode.run({ profile: { id: "app", entities: [] } }, ctx);
+  // --- Batch 8: ai.langgraph.flow, ai.embedder, realtime.client, ui.screens ---
+  await AiLanggraphFlowNode.run({}, ctx);
+  await AiEmbedderNode.run({}, ctx);
+  await RealtimeClientNode.run({}, ctx);
+  await UiScreensNode.run({ profile: { id: "app", entities: [] } }, ctx);
 
-    // --- Batch 9: vercel.config, monitoring.basics ---
-    await VercelConfigNode.run({}, ctx);
-    await MonitoringBasicsNode.run({}, ctx);
+  // --- Batch 9: vercel.config, monitoring.basics ---
+  await VercelConfigNode.run({}, ctx);
+  await MonitoringBasicsNode.run({}, ctx);
 
-    // --- Batch 10: github.setup, deploy.docs ---
-    await GithubSetup.run({}, ctx);
-    await DeployDocs.run({}, ctx);
-
+  // --- Batch 10: github.setup, deploy.docs ---
+  await GithubSetup.run({}, ctx);
+  await DeployDocs.run({}, ctx);
 }
 
 run().catch((err) => {
-    console.error("Dev runner failed:", err);
-    process.exit(1);
+  console.error("Dev runner failed:", err);
+  process.exit(1);
 });

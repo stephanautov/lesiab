@@ -21,7 +21,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 export interface NodeSpec<I = unknown, O = unknown> {
   id: NodeId;
@@ -102,7 +104,11 @@ export async function jsonResponse<T = unknown>(prompt: string, schema?: Record<
 `);
 
     await ctx.storage.saveArtifact(path, content);
-    ctx.logger.info({ msg: "ai.openai.setup:written", files: [path], correlationId: ctx.correlationId });
+    ctx.logger.info({
+      msg: "ai.openai.setup:written",
+      files: [path],
+      correlationId: ctx.correlationId,
+    });
     return { files: [path] };
   },
 };

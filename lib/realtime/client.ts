@@ -9,7 +9,10 @@ let _client: ReturnType<typeof createClient> | null = null;
 
 function getClient() {
   if (_client) return _client;
-  _client = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  _client = createClient(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  );
   return _client;
 }
 
@@ -21,15 +24,19 @@ export function useRealtimeChannel<T>(
   entity: string,
   event: string,
   cacheKey: unknown[],
-  updater: (old: T | undefined, payload: any) => T
+  updater: (old: T | undefined, payload: any) => T,
 ) {
   const qc = useQueryClient();
   useEffect(() => {
     const supa = getClient();
-    const ch = supa.channel(`lesiab:${entity}`).on("broadcast", { event }, (msg) => {
-      qc.setQueryData<T>(cacheKey, (old) => updater(old, msg.payload));
-    });
+    const ch = supa
+      .channel(`lesiab:${entity}`)
+      .on("broadcast", { event }, (msg) => {
+        qc.setQueryData<T>(cacheKey, (old) => updater(old, msg.payload));
+      });
     ch.subscribe();
-    return () => { ch.unsubscribe(); };
+    return () => {
+      ch.unsubscribe();
+    };
   }, [entity, event, qc, JSON.stringify(cacheKey)]);
 }

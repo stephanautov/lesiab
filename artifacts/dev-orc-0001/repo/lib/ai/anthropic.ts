@@ -13,7 +13,10 @@ export function getAnthropic() {
 type JsonOk<T> = { ok: true; data: T };
 type JsonErr = { ok: false; rawText: string };
 
-export async function jsonMessage<T = unknown>(prompt: string, system = "Return strict JSON only. No prose."): Promise<JsonOk<T> | JsonErr> {
+export async function jsonMessage<T = unknown>(
+  prompt: string,
+  system = "Return strict JSON only. No prose.",
+): Promise<JsonOk<T> | JsonErr> {
   const client = getAnthropic();
   const model = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20240620";
 
@@ -24,13 +27,14 @@ export async function jsonMessage<T = unknown>(prompt: string, system = "Return 
     messages: [{ role: "user", content: prompt }],
     // If supported, prefer structured JSON mode:
     // @ts-ignore - newer SDKs support response_format; ignore if not available
-    response_format: { type: "json_object" }
+    response_format: { type: "json_object" },
   } as any);
 
   // Try to get a single text blob
   const text =
     (msg as any)?.content?.map((c: any) => c?.text ?? "").join("") ??
-    ((msg as any)?.output_text ?? "");
+    (msg as any)?.output_text ??
+    "";
 
   try {
     const parsed = JSON.parse(text || "{}") as T;

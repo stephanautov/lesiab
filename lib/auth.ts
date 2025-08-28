@@ -15,7 +15,9 @@ export function getAccessTokenFromRequest(req: Request): string | undefined {
   // Next Request exposes cookies via req.headers.get("cookie")
   const cookieHeader = req.headers.get("cookie") ?? "";
   // Convention when using Supabase helpers: 'sb-access-token'
-  const match = cookieHeader.split(/;\s*/).find((c) => c.startsWith("sb-access-token="));
+  const match = cookieHeader
+    .split(/;\s*/)
+    .find((c) => c.startsWith("sb-access-token="));
   if (!match) return undefined;
   return decodeURIComponent(match.split("=")[1] ?? "");
 }

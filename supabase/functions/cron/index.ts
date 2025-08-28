@@ -4,5 +4,7 @@
 Deno.serve(async (_req) => {
   const now = new Date().toISOString();
   const body = JSON.stringify({ ok: true, ranAt: now });
-  return new Response(body, { headers: { "content-type": "application/json" } });
+  return new Response(body, {
+    headers: { "content-type": "application/json" },
+  });
 });

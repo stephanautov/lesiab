@@ -4,10 +4,15 @@
 Deno.serve(async (req) => {
   const auth = req.headers.get("authorization") || "";
   if (!auth.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ ok: false, error: "missing bearer auth" }), { status: 401 });
+    return new Response(
+      JSON.stringify({ ok: false, error: "missing bearer auth" }),
+      { status: 401 },
+    );
   }
   const body = await req.json().catch(() => ({}));
   const { jobName, payload, delaySeconds = 0 } = body ?? {};
   const result = { ok: true, received: { jobName, delaySeconds, payload } };
-  return new Response(JSON.stringify(result), { headers: { "content-type": "application/json" } });
+  return new Response(JSON.stringify(result), {
+    headers: { "content-type": "application/json" },
+  });
 });

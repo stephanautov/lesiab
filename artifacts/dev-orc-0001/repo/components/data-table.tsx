@@ -5,7 +5,7 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  useReactTable
+  useReactTable,
 } from "@tanstack/react-table";
 
 type AnyRow = Record<string, unknown>;
@@ -16,14 +16,14 @@ export function DataTable({ data }: { data: AnyRow[] }) {
     return Object.keys(first).map((k) => ({
       accessorKey: k,
       header: k,
-      cell: (info) => String(info.getValue() ?? "")
+      cell: (info) => String(info.getValue() ?? ""),
     }));
   }, [data]);
 
   const table = useReactTable({
     data: data ?? [],
     columns,
-    getCoreRowModel: getCoreRowModel()
+    getCoreRowModel: getCoreRowModel(),
   });
 
   if (!data || data.length === 0) {

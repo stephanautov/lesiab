@@ -9,7 +9,10 @@ export const uploadsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.userId;
       if (!userId) throw new Error("Unauthorized");
-      const { path, url } = await createPresignedUploadUrl(userId, input.filename);
+      const { path, url } = await createPresignedUploadUrl(
+        userId,
+        input.filename,
+      );
       return { path, url };
     }),
 });

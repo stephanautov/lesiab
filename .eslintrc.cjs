@@ -5,8 +5,11 @@ module.exports = {
   env: { es2022: true, node: true, browser: true },
   extends: [],
   rules: {
-    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
-    "no-console": "off"
+    "no-unused-vars": [
+      "warn",
+      { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+    ],
+    "no-console": "off",
   },
-  ignorePatterns: ["node_modules/", ".next/", "dist/", "out/", "artifacts/"]
+  ignorePatterns: ["node_modules/", ".next/", "dist/", "out/", "artifacts/"],
 };

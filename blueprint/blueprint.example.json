@@ -1,324 +1,324 @@
 {
-    "id": "deployable-codegen",
-    "version": "1.0.0",
-    "nodes": [
-        {
-            "id": "profile.normalize",
-            "phase": "processResponses"
-        },
-        {
-            "id": "repo.scaffold",
-            "phase": "plan"
-        },
-        {
-            "id": "env.schema",
-            "phase": "validate"
-        },
-        {
-            "id": "ui.shadcn.init",
-            "phase": "execute"
-        },
-        {
-            "id": "client.state.install",
-            "phase": "execute"
-        },
-        {
-            "id": "forms.rhf.setup",
-            "phase": "execute"
-        },
-        {
-            "id": "ui.datatable",
-            "phase": "execute"
-        },
-        {
-            "id": "sa.init",
-            "phase": "execute"
-        },
-        {
-            "id": "db.schema",
-            "phase": "execute"
-        },
-        {
-            "id": "auth.setup",
-            "phase": "execute"
-        },
-        {
-            "id": "sa.rls",
-            "phase": "execute"
-        },
-        {
-            "id": "realtime.channels",
-            "phase": "execute"
-        },
-        {
-            "id": "storage.buckets",
-            "phase": "execute"
-        },
-        {
-            "id": "cron.queue.setup",
-            "phase": "execute"
-        },
-        {
-            "id": "edge.functions",
-            "phase": "execute"
-        },
-        {
-            "id": "trpc.server",
-            "phase": "execute"
-        },
-        {
-            "id": "rest.public",
-            "phase": "execute"
-        },
-        {
-            "id": "trpc.client",
-            "phase": "execute"
-        },
-        {
-            "id": "next.app.router",
-            "phase": "execute"
-        },
-        {
-            "id": "upload.direct",
-            "phase": "execute"
-        },
-        {
-            "id": "ai.openai.setup",
-            "phase": "execute"
-        },
-        {
-            "id": "ai.anthropic.setup",
-            "phase": "execute"
-        },
-        {
-            "id": "ai.langgraph.flow",
-            "phase": "codeGeneration"
-        },
-        {
-            "id": "ai.embedder",
-            "phase": "execute"
-        },
-        {
-            "id": "realtime.client",
-            "phase": "execute"
-        },
-        {
-            "id": "ui.screens",
-            "phase": "codeGeneration"
-        },
-        {
-            "id": "vercel.config",
-            "phase": "integrate"
-        },
-        {
-            "id": "monitoring.basics",
-            "phase": "integrate"
-        },
-        {
-            "id": "github.setup",
-            "phase": "finalize"
-        },
-        {
-            "id": "deploy.docs",
-            "phase": "finalize"
-        }
-    ],
-    "edges": [
-        {
-            "from": "profile.normalize",
-            "to": "repo.scaffold"
-        },
-        {
-            "from": "profile.normalize",
-            "to": "db.schema"
-        },
-        {
-            "from": "repo.scaffold",
-            "to": "env.schema"
-        },
-        {
-            "from": "repo.scaffold",
-            "to": "ui.shadcn.init"
-        },
-        {
-            "from": "repo.scaffold",
-            "to": "client.state.install"
-        },
-        {
-            "from": "ui.shadcn.init",
-            "to": "forms.rhf.setup"
-        },
-        {
-            "from": "ui.shadcn.init",
-            "to": "ui.datatable"
-        },
-        {
-            "from": "client.state.install",
-            "to": "ui.datatable"
-        },
-        {
-            "from": "env.schema",
-            "to": "sa.init"
-        },
-        {
-            "from": "sa.init",
-            "to": "db.schema"
-        },
-        {
-            "from": "sa.init",
-            "to": "auth.setup"
-        },
-        {
-            "from": "db.schema",
-            "to": "sa.rls"
-        },
-        {
-            "from": "db.schema",
-            "to": "realtime.channels"
-        },
-        {
-            "from": "auth.setup",
-            "to": "realtime.channels"
-        },
-        {
-            "from": "sa.init",
-            "to": "storage.buckets"
-        },
-        {
-            "from": "auth.setup",
-            "to": "storage.buckets"
-        },
-        {
-            "from": "sa.init",
-            "to": "cron.queue.setup"
-        },
-        {
-            "from": "db.schema",
-            "to": "cron.queue.setup"
-        },
-        {
-            "from": "auth.setup",
-            "to": "edge.functions"
-        },
-        {
-            "from": "db.schema",
-            "to": "edge.functions"
-        },
-        {
-            "from": "storage.buckets",
-            "to": "edge.functions"
-        },
-        {
-            "from": "env.schema",
-            "to": "trpc.server"
-        },
-        {
-            "from": "auth.setup",
-            "to": "trpc.server"
-        },
-        {
-            "from": "env.schema",
-            "to": "rest.public"
-        },
-        {
-            "from": "client.state.install",
-            "to": "trpc.client"
-        },
-        {
-            "from": "trpc.server",
-            "to": "trpc.client"
-        },
-        {
-            "from": "repo.scaffold",
-            "to": "next.app.router"
-        },
-        {
-            "from": "auth.setup",
-            "to": "next.app.router"
-        },
-        {
-            "from": "storage.buckets",
-            "to": "upload.direct"
-        },
-        {
-            "from": "trpc.server",
-            "to": "upload.direct"
-        },
-        {
-            "from": "auth.setup",
-            "to": "upload.direct"
-        },
-        {
-            "from": "env.schema",
-            "to": "ai.openai.setup"
-        },
-        {
-            "from": "env.schema",
-            "to": "ai.anthropic.setup"
-        },
-        {
-            "from": "ai.openai.setup",
-            "to": "ai.langgraph.flow"
-        },
-        {
-            "from": "ai.anthropic.setup",
-            "to": "ai.langgraph.flow"
-        },
-        {
-            "from": "db.schema",
-            "to": "ai.embedder"
-        },
-        {
-            "from": "edge.functions",
-            "to": "ai.embedder"
-        },
-        {
-            "from": "ai.openai.setup",
-            "to": "ai.embedder"
-        },
-        {
-            "from": "ai.anthropic.setup",
-            "to": "ai.embedder"
-        },
-        {
-            "from": "realtime.channels",
-            "to": "realtime.client"
-        },
-        {
-            "from": "client.state.install",
-            "to": "realtime.client"
-        },
-        {
-            "from": "next.app.router",
-            "to": "ui.screens"
-        },
-        {
-            "from": "forms.rhf.setup",
-            "to": "ui.screens"
-        },
-        {
-            "from": "trpc.client",
-            "to": "ui.screens"
-        },
-        {
-            "from": "env.schema",
-            "to": "vercel.config"
-        },
-        {
-            "from": "vercel.config",
-            "to": "monitoring.basics"
-        },
-        {
-            "from": "repo.scaffold",
-            "to": "github.setup"
-        },
-        {
-            "from": "sa.init",
-            "to": "deploy.docs"
-        },
-        {
-            "from": "vercel.config",
-            "to": "deploy.docs"
-        }
-    ]
+  "id": "deployable-codegen",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": "profile.normalize",
+      "phase": "processResponses"
+    },
+    {
+      "id": "repo.scaffold",
+      "phase": "plan"
+    },
+    {
+      "id": "env.schema",
+      "phase": "validate"
+    },
+    {
+      "id": "ui.shadcn.init",
+      "phase": "execute"
+    },
+    {
+      "id": "client.state.install",
+      "phase": "execute"
+    },
+    {
+      "id": "forms.rhf.setup",
+      "phase": "execute"
+    },
+    {
+      "id": "ui.datatable",
+      "phase": "execute"
+    },
+    {
+      "id": "sa.init",
+      "phase": "execute"
+    },
+    {
+      "id": "db.schema",
+      "phase": "execute"
+    },
+    {
+      "id": "auth.setup",
+      "phase": "execute"
+    },
+    {
+      "id": "sa.rls",
+      "phase": "execute"
+    },
+    {
+      "id": "realtime.channels",
+      "phase": "execute"
+    },
+    {
+      "id": "storage.buckets",
+      "phase": "execute"
+    },
+    {
+      "id": "cron.queue.setup",
+      "phase": "execute"
+    },
+    {
+      "id": "edge.functions",
+      "phase": "execute"
+    },
+    {
+      "id": "trpc.server",
+      "phase": "execute"
+    },
+    {
+      "id": "rest.public",
+      "phase": "execute"
+    },
+    {
+      "id": "trpc.client",
+      "phase": "execute"
+    },
+    {
+      "id": "next.app.router",
+      "phase": "execute"
+    },
+    {
+      "id": "upload.direct",
+      "phase": "execute"
+    },
+    {
+      "id": "ai.openai.setup",
+      "phase": "execute"
+    },
+    {
+      "id": "ai.anthropic.setup",
+      "phase": "execute"
+    },
+    {
+      "id": "ai.langgraph.flow",
+      "phase": "codeGeneration"
+    },
+    {
+      "id": "ai.embedder",
+      "phase": "execute"
+    },
+    {
+      "id": "realtime.client",
+      "phase": "execute"
+    },
+    {
+      "id": "ui.screens",
+      "phase": "codeGeneration"
+    },
+    {
+      "id": "vercel.config",
+      "phase": "integrate"
+    },
+    {
+      "id": "monitoring.basics",
+      "phase": "integrate"
+    },
+    {
+      "id": "github.setup",
+      "phase": "finalize"
+    },
+    {
+      "id": "deploy.docs",
+      "phase": "finalize"
+    }
+  ],
+  "edges": [
+    {
+      "from": "profile.normalize",
+      "to": "repo.scaffold"
+    },
+    {
+      "from": "profile.normalize",
+      "to": "db.schema"
+    },
+    {
+      "from": "repo.scaffold",
+      "to": "env.schema"
+    },
+    {
+      "from": "repo.scaffold",
+      "to": "ui.shadcn.init"
+    },
+    {
+      "from": "repo.scaffold",
+      "to": "client.state.install"
+    },
+    {
+      "from": "ui.shadcn.init",
+      "to": "forms.rhf.setup"
+    },
+    {
+      "from": "ui.shadcn.init",
+      "to": "ui.datatable"
+    },
+    {
+      "from": "client.state.install",
+      "to": "ui.datatable"
+    },
+    {
+      "from": "env.schema",
+      "to": "sa.init"
+    },
+    {
+      "from": "sa.init",
+      "to": "db.schema"
+    },
+    {
+      "from": "sa.init",
+      "to": "auth.setup"
+    },
+    {
+      "from": "db.schema",
+      "to": "sa.rls"
+    },
+    {
+      "from": "db.schema",
+      "to": "realtime.channels"
+    },
+    {
+      "from": "auth.setup",
+      "to": "realtime.channels"
+    },
+    {
+      "from": "sa.init",
+      "to": "storage.buckets"
+    },
+    {
+      "from": "auth.setup",
+      "to": "storage.buckets"
+    },
+    {
+      "from": "sa.init",
+      "to": "cron.queue.setup"
+    },
+    {
+      "from": "db.schema",
+      "to": "cron.queue.setup"
+    },
+    {
+      "from": "auth.setup",
+      "to": "edge.functions"
+    },
+    {
+      "from": "db.schema",
+      "to": "edge.functions"
+    },
+    {
+      "from": "storage.buckets",
+      "to": "edge.functions"
+    },
+    {
+      "from": "env.schema",
+      "to": "trpc.server"
+    },
+    {
+      "from": "auth.setup",
+      "to": "trpc.server"
+    },
+    {
+      "from": "env.schema",
+      "to": "rest.public"
+    },
+    {
+      "from": "client.state.install",
+      "to": "trpc.client"
+    },
+    {
+      "from": "trpc.server",
+      "to": "trpc.client"
+    },
+    {
+      "from": "repo.scaffold",
+      "to": "next.app.router"
+    },
+    {
+      "from": "auth.setup",
+      "to": "next.app.router"
+    },
+    {
+      "from": "storage.buckets",
+      "to": "upload.direct"
+    },
+    {
+      "from": "trpc.server",
+      "to": "upload.direct"
+    },
+    {
+      "from": "auth.setup",
+      "to": "upload.direct"
+    },
+    {
+      "from": "env.schema",
+      "to": "ai.openai.setup"
+    },
+    {
+      "from": "env.schema",
+      "to": "ai.anthropic.setup"
+    },
+    {
+      "from": "ai.openai.setup",
+      "to": "ai.langgraph.flow"
+    },
+    {
+      "from": "ai.anthropic.setup",
+      "to": "ai.langgraph.flow"
+    },
+    {
+      "from": "db.schema",
+      "to": "ai.embedder"
+    },
+    {
+      "from": "edge.functions",
+      "to": "ai.embedder"
+    },
+    {
+      "from": "ai.openai.setup",
+      "to": "ai.embedder"
+    },
+    {
+      "from": "ai.anthropic.setup",
+      "to": "ai.embedder"
+    },
+    {
+      "from": "realtime.channels",
+      "to": "realtime.client"
+    },
+    {
+      "from": "client.state.install",
+      "to": "realtime.client"
+    },
+    {
+      "from": "next.app.router",
+      "to": "ui.screens"
+    },
+    {
+      "from": "forms.rhf.setup",
+      "to": "ui.screens"
+    },
+    {
+      "from": "trpc.client",
+      "to": "ui.screens"
+    },
+    {
+      "from": "env.schema",
+      "to": "vercel.config"
+    },
+    {
+      "from": "vercel.config",
+      "to": "monitoring.basics"
+    },
+    {
+      "from": "repo.scaffold",
+      "to": "github.setup"
+    },
+    {
+      "from": "sa.init",
+      "to": "deploy.docs"
+    },
+    {
+      "from": "vercel.config",
+      "to": "deploy.docs"
+    }
+  ]
 }

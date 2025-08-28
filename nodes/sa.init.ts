@@ -25,7 +25,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 export interface NodeSpec<I = unknown, O = unknown> {
   id: NodeId;
@@ -55,7 +57,8 @@ export const SaInitNode: NodeSpec<unknown, { files: string[] }> = {
 
     // Minimal, deterministic Supabase config (safe placeholder for MVP)
     // Developers may run `supabase init` later to replace with a project-specific config.
-    const configToml = lf(`# supabase/config.toml — minimal, schema-correct, deterministic
+    const configToml =
+      lf(`# supabase/config.toml — minimal, schema-correct, deterministic
 
 project_id = "lesiab"
 

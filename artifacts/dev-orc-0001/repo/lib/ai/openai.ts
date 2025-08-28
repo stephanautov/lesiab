@@ -13,7 +13,10 @@ export function getOpenAI() {
 type JsonOk<T> = { ok: true; data: T };
 type JsonErr = { ok: false; rawText: string };
 
-export async function jsonResponse<T = unknown>(prompt: string, schema?: Record<string, unknown>): Promise<JsonOk<T> | JsonErr> {
+export async function jsonResponse<T = unknown>(
+  prompt: string,
+  schema?: Record<string, unknown>,
+): Promise<JsonOk<T> | JsonErr> {
   const client = getOpenAI();
 
   // Pick a small, cost-effective default model; callers can tweak later.
@@ -27,22 +30,25 @@ export async function jsonResponse<T = unknown>(prompt: string, schema?: Record<
       ? {
           response_format: {
             type: "json_schema",
-            json_schema: { name: "Output", schema, strict: true }
-          }
+            json_schema: { name: "Output", schema, strict: true },
+          },
         }
       : { response_format: { type: "json_object" } }),
   });
 
   // Try to extract consolidated text from Responses API result
   // The SDK exposes a convenience: resp.output_text; fallback to concatenating content.
-  const text = (resp as any).output_text
-    ?? (Array.isArray((resp as any).output)
-          ? ((resp as any).output.map((o: any) => {
-              if (!o?.content) return "";
-              const c = Array.isArray(o.content) ? o.content : [o.content];
-              return c.map((p: any) => p?.text ?? "").join("");
-            }).join(""))
-          : "");
+  const text =
+    (resp as any).output_text ??
+    (Array.isArray((resp as any).output)
+      ? (resp as any).output
+          .map((o: any) => {
+            if (!o?.content) return "";
+            const c = Array.isArray(o.content) ? o.content : [o.content];
+            return c.map((p: any) => p?.text ?? "").join("");
+          })
+          .join("")
+      : "");
 
   try {
     const parsed = JSON.parse(text || "{}") as T;

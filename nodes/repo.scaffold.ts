@@ -26,7 +26,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 
 export interface NodeSpec<I = unknown, O = unknown> {
@@ -47,7 +49,10 @@ export interface NodeSpec<I = unknown, O = unknown> {
 // Minimal profile shape (keep local to avoid cross-node import coupling)
 const ProfileSchema = z.object({
   id: z.string().min(1).default("app"),
-  version: z.string().regex(/^\d+\.\d+\.\d+$/).default("1.0.0"),
+  version: z
+    .string()
+    .regex(/^\d+\.\d+\.\d+$/)
+    .default("1.0.0"),
 });
 type Profile = z.infer<typeof ProfileSchema>;
 
@@ -76,10 +81,15 @@ export const RepoScaffoldNode: NodeSpec<
   phase: "plan",
   estimate: () => ({ tokens: 500, usd: 0.002 }),
   async run(input, ctx) {
-    ctx.logger.info({ msg: "repo.scaffold:start", correlationId: ctx.correlationId });
+    ctx.logger.info({
+      msg: "repo.scaffold:start",
+      correlationId: ctx.correlationId,
+    });
 
     const parsed = InputSchema.safeParse(input);
-    const profile: Profile = ProfileSchema.parse(parsed.success ? parsed.data.profile : {});
+    const profile: Profile = ProfileSchema.parse(
+      parsed.success ? parsed.data.profile : {},
+    );
 
     const root = `artifacts/${ctx.orchestrationId}/repo`;
 
@@ -90,11 +100,11 @@ export const RepoScaffoldNode: NodeSpec<
       private: true,
       scripts: {
         "codegen:crud": "hygen crud new",
-        "format": "prettier --write .",
+        format: "prettier --write .",
         "lint:types": "tsc -p tsconfig.json --noEmit",
-        "dev": "next dev",
-        "build": "next build",
-        "start": "next start",
+        dev: "next dev",
+        build: "next build",
+        start: "next start",
       },
       engines: { node: ">=18.18.0" },
     };

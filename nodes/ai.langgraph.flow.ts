@@ -26,7 +26,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 export interface NodeSpec<I = unknown, O = unknown> {
   id: NodeId;
@@ -221,7 +223,11 @@ export const AiLanggraphFlowNode: NodeSpec<unknown, { files: string[] }> = {
   async run(_input, ctx) {
     const path = `artifacts/${ctx.orchestrationId}/repo/lib/ai/flows/codegenFlow.ts`;
     await ctx.storage.saveArtifact(path, CODEGEN_FLOW_TS);
-    ctx.logger.info({ msg: "ai.langgraph.flow:written", files: [path], correlationId: ctx.correlationId });
+    ctx.logger.info({
+      msg: "ai.langgraph.flow:written",
+      files: [path],
+      correlationId: ctx.correlationId,
+    });
     return { files: [path] };
   },
 };

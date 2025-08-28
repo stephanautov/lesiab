@@ -11,7 +11,13 @@ type Props<T> = {
   rows?: number;
 };
 
-export function TextArea<T>({ control, name, label, placeholder, rows = 4 }: Props<T>) {
+export function TextArea<T>({
+  control,
+  name,
+  label,
+  placeholder,
+  rows = 4,
+}: Props<T>) {
   return (
     <div className="space-y-1">
       {label ? <Label htmlFor={name}>{label}</Label> : null}
@@ -28,7 +34,9 @@ export function TextArea<T>({ control, name, label, placeholder, rows = 4 }: Pro
               {...field}
             />
             {fieldState.error ? (
-              <p className="text-xs text-red-600">{String(fieldState.error.message ?? "Invalid")}</p>
+              <p className="text-xs text-red-600">
+                {String(fieldState.error.message ?? "Invalid")}
+              </p>
             ) : null}
           </>
         )}

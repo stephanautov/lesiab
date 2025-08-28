@@ -22,7 +22,9 @@ export function TextField<T>({ control, name, label, placeholder }: Props<T>) {
           <>
             <Input id={name} placeholder={placeholder} {...field} />
             {fieldState.error ? (
-              <p className="text-xs text-red-600">{String(fieldState.error.message ?? "Invalid")}</p>
+              <p className="text-xs text-red-600">
+                {String(fieldState.error.message ?? "Invalid")}
+              </p>
             ) : null}
           </>
         )}

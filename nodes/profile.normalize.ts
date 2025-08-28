@@ -22,7 +22,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 
 export interface NodeSpec<I = unknown, O = unknown> {
@@ -46,7 +48,9 @@ export interface NodeSpec<I = unknown, O = unknown> {
 
 const FieldSchema = z.object({
   name: z.string().min(1),
-  dbType: z.enum(["text", "int", "uuid", "json", "timestamp", "vector"]).default("text"),
+  dbType: z
+    .enum(["text", "int", "uuid", "json", "timestamp", "vector"])
+    .default("text"),
   required: z.boolean().default(false),
   pk: z.boolean().optional(),
   fk: z.string().optional(), // "auth.users.id" or "table.column"
@@ -74,7 +78,10 @@ const LlmSchema = z.object({
 
 export const ProfileSchema = z.object({
   id: z.string().min(1),
-  version: z.string().regex(/^\d+\.\d+\.\d+$/).default("1.0.0"),
+  version: z
+    .string()
+    .regex(/^\d+\.\d+\.\d+$/)
+    .default("1.0.0"),
   entities: z.array(EntitySchema).default([]),
   routes: z.array(RouteSchema).default([]),
   llm: LlmSchema.default({ providerPreference: "openai", useLangGraph: true }),
@@ -97,7 +104,11 @@ const InputSchema = z.union([
  * ────────────────────────────────────────────────────────────────────────────*/
 
 function slugify(input: string): string {
-  return input.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function toSnakePlural(name: string): string {
@@ -122,24 +133,32 @@ function normalizeProfileLoose(loose: any): Profile {
           typeof loose?.name === "string" && loose.name.trim()
             ? loose.name
             : typeof loose?.title === "string" && loose.title.trim()
-            ? loose.title
-            : "app",
+              ? loose.title
+              : "app",
         );
 
-  const entitiesLoose: any[] = Array.isArray(loose?.entities) ? loose.entities : [];
+  const entitiesLoose: any[] = Array.isArray(loose?.entities)
+    ? loose.entities
+    : [];
   const routesLoose: any[] = Array.isArray(loose?.routes) ? loose.routes : [];
 
   // Normalize entities
   const entities: Profile["entities"] = entitiesLoose.map((e, idx) => {
     const name: string =
-      typeof e?.name === "string" && e.name.trim().length > 0 ? e.name : `Entity${idx + 1}`;
+      typeof e?.name === "string" && e.name.trim().length > 0
+        ? e.name
+        : `Entity${idx + 1}`;
     const table: string =
-      typeof e?.table === "string" && e.table.trim().length > 0 ? e.table : toSnakePlural(name);
+      typeof e?.table === "string" && e.table.trim().length > 0
+        ? e.table
+        : toSnakePlural(name);
 
     const fieldsArray: any[] = Array.isArray(e?.fields) ? e.fields : [];
     const fields = fieldsArray.map((f) => ({
       name: String(f?.name ?? "").trim() || "field",
-      dbType: ["text", "int", "uuid", "json", "timestamp", "vector"].includes(f?.dbType)
+      dbType: ["text", "int", "uuid", "json", "timestamp", "vector"].includes(
+        f?.dbType,
+      )
         ? f.dbType
         : "text",
       required: Boolean(f?.required ?? false),
@@ -153,7 +172,9 @@ function normalizeProfileLoose(loose: any): Profile {
       fields,
       realtime: Boolean(e?.realtime ?? false),
       storageBuckets: Array.isArray(e?.storageBuckets)
-        ? e.storageBuckets.filter((b: any) => typeof b === "string" && b.trim().length > 0)
+        ? e.storageBuckets.filter(
+            (b: any) => typeof b === "string" && b.trim().length > 0,
+          )
         : [],
       vectorSearch: Boolean(e?.vectorSearch ?? false),
     };
@@ -162,9 +183,13 @@ function normalizeProfileLoose(loose: any): Profile {
   // Normalize routes
   const routes: Profile["routes"] = routesLoose.map((r, idx) => {
     const path =
-      typeof r?.path === "string" && r.path.trim().length > 0 ? r.path : `/route-${idx + 1}`;
+      typeof r?.path === "string" && r.path.trim().length > 0
+        ? r.path
+        : `/route-${idx + 1}`;
     const entity =
-      typeof r?.entity === "string" && r.entity.trim().length > 0 ? r.entity : entities[0]?.name ?? "Entity1";
+      typeof r?.entity === "string" && r.entity.trim().length > 0
+        ? r.entity
+        : (entities[0]?.name ?? "Entity1");
     const type: "list" | "detail" | "custom" =
       r?.type === "detail" || r?.type === "custom" ? r.type : "list";
     return { path, entity, type };
@@ -179,7 +204,11 @@ function normalizeProfileLoose(loose: any): Profile {
   // Construct and validate via schema (fills defaults)
   const candidate = {
     id: baseId || "app",
-    version: typeof loose?.version === "string" && /^\d+\.\d+\.\d+$/.test(loose.version) ? loose.version : "1.0.0",
+    version:
+      typeof loose?.version === "string" &&
+      /^\d+\.\d+\.\d+$/.test(loose.version)
+        ? loose.version
+        : "1.0.0",
     entities,
     routes,
     llm,
@@ -203,7 +232,11 @@ function inferProfileFromText(text: string): Profile {
 }
 
 /** Filter or warn on routes that reference non-existent entities */
-function reconcileRoutes(profile: Profile, logger: ExecutionContext["logger"], correlationId: string): Profile {
+function reconcileRoutes(
+  profile: Profile,
+  logger: ExecutionContext["logger"],
+  correlationId: string,
+): Profile {
   const p = deepClone(profile);
   const entityNames = new Set(p.entities.map((e) => e.name));
   const kept: typeof p.routes = [];
@@ -235,7 +268,10 @@ export const ProfileNormalizeNode: NodeSpec<
   phase: "processResponses",
   estimate: () => ({ tokens: 250, usd: 0.001 }),
   async run(input, ctx) {
-    ctx.logger.info({ msg: "profile.normalize:start", correlationId: ctx.correlationId });
+    ctx.logger.info({
+      msg: "profile.normalize:start",
+      correlationId: ctx.correlationId,
+    });
 
     const parsed = InputSchema.parse(input);
 
@@ -243,7 +279,10 @@ export const ProfileNormalizeNode: NodeSpec<
     if (typeof parsed === "string") {
       // Try JSON parse first for convenience; otherwise treat as free text.
       const trimmed = parsed.trim();
-      if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+      if (
+        (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+        (trimmed.startsWith("[") && trimmed.endsWith("]"))
+      ) {
         try {
           loose = JSON.parse(trimmed);
         } catch {
@@ -257,7 +296,10 @@ export const ProfileNormalizeNode: NodeSpec<
       const text = String((parsed as any).description);
       const inferred = inferProfileFromText(text);
       const artifactPath = `artifacts/${ctx.orchestrationId}/profile.json`;
-      await ctx.storage.saveArtifact(artifactPath, JSON.stringify(inferred, null, 2));
+      await ctx.storage.saveArtifact(
+        artifactPath,
+        JSON.stringify(inferred, null, 2),
+      );
       ctx.logger.info({
         msg: "profile.normalize:written",
         artifactPath,
@@ -283,7 +325,10 @@ export const ProfileNormalizeNode: NodeSpec<
     profile = ProfileSchema.parse(profile);
 
     const artifactPath = `artifacts/${ctx.orchestrationId}/profile.json`;
-    await ctx.storage.saveArtifact(artifactPath, JSON.stringify(profile, null, 2));
+    await ctx.storage.saveArtifact(
+      artifactPath,
+      JSON.stringify(profile, null, 2),
+    );
     ctx.logger.info({
       msg: "profile.normalize:written",
       artifactPath,

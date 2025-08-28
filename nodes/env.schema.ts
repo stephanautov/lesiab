@@ -21,7 +21,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 
 export interface NodeSpec<I = unknown, O = unknown> {
@@ -93,7 +95,10 @@ NEXT_PUBLIC_APP_NAME=App
     for (const f of files) {
       await ctx.storage.saveArtifact(f.path, f.content);
     }
-    ctx.logger.info({ msg: "env.schema:written", files: files.map((f) => f.path) });
+    ctx.logger.info({
+      msg: "env.schema:written",
+      files: files.map((f) => f.path),
+    });
     return { files: files.map((f) => f.path) };
   },
 };

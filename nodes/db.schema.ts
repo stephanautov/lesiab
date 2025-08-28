@@ -29,7 +29,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 export interface NodeSpec<I = unknown, O = unknown> {
   id: NodeId;
@@ -49,7 +51,9 @@ export interface NodeSpec<I = unknown, O = unknown> {
 // Minimal local Profile schema (kept in sync with profile.normalize outputs)
 const FieldSchema = z.object({
   name: z.string().min(1),
-  dbType: z.enum(["text", "int", "uuid", "json", "timestamp", "vector"]).default("text"),
+  dbType: z
+    .enum(["text", "int", "uuid", "json", "timestamp", "vector"])
+    .default("text"),
   required: z.boolean().default(false),
   pk: z.boolean().optional(),
   fk: z.string().optional(), // "other_table.other_col"
@@ -62,7 +66,10 @@ const EntitySchema = z.object({
 });
 const ProfileSchema = z.object({
   id: z.string().min(1).default("app"),
-  version: z.string().regex(/^\d+\.\d+\.\d+$/).default("1.0.0"),
+  version: z
+    .string()
+    .regex(/^\d+\.\d+\.\d+$/)
+    .default("1.0.0"),
   entities: z.array(EntitySchema).default([]),
 });
 type Profile = z.infer<typeof ProfileSchema>;
@@ -105,7 +112,9 @@ function genMigration(profile: Profile): string {
   parts.push(``);
 
   if (profile.entities.length === 0) {
-    parts.push(`-- No entities defined; tables can be added in subsequent runs.`);
+    parts.push(
+      `-- No entities defined; tables can be added in subsequent runs.`,
+    );
     return parts.join("\n") + "\n";
   }
 
@@ -135,16 +144,20 @@ function genMigration(profile: Profile): string {
       const refTable = sqlIdent(refTableRaw);
       const refCol = sqlIdent(refColRaw);
       parts.push(
-        `alter table "${table}" add constraint "${table}_${f.name}_fkey" foreign key ("${f.name}") references "${refTable}"("${refCol}") on delete set null;`
+        `alter table "${table}" add constraint "${table}_${f.name}_fkey" foreign key ("${f.name}") references "${refTable}"("${refCol}") on delete set null;`,
       );
     }
     parts.push(``);
 
     // Useful indexes
-    parts.push(`create index if not exists "${table}_updated_at_idx" on "${table}" ("updated_at");`);
+    parts.push(
+      `create index if not exists "${table}_updated_at_idx" on "${table}" ("updated_at");`,
+    );
     if (ent.vectorSearch) {
       // IVF Flat or HNSW indexes can be added later; for MVP, leave without index.
-      parts.push(`-- Vector column present; consider adding IVF/HNSW index post-MVP if needed.`);
+      parts.push(
+        `-- Vector column present; consider adding IVF/HNSW index post-MVP if needed.`,
+      );
     }
     parts.push(``);
   }
@@ -161,7 +174,9 @@ export const DbSchemaNode: NodeSpec<
   estimate: () => ({ tokens: 800, usd: 0.003 }),
   async run(input, ctx) {
     const parsed = InputSchema.safeParse(input);
-    const profile = ProfileSchema.parse(parsed.success ? parsed.data.profile ?? {} : {});
+    const profile = ProfileSchema.parse(
+      parsed.success ? (parsed.data.profile ?? {}) : {},
+    );
     const root = `artifacts/${ctx.orchestrationId}/repo`;
 
     const migration = lf(genMigration(profile));

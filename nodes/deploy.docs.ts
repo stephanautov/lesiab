@@ -21,7 +21,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 export interface NodeSpec<I = unknown, O = unknown> {
   id: NodeId;
@@ -151,7 +153,11 @@ supabase functions deploy file-processor
 `);
 
     await ctx.storage.saveArtifact(path, md);
-    ctx.logger.info({ msg: "deploy.docs:written", files: [path], correlationId: ctx.correlationId });
+    ctx.logger.info({
+      msg: "deploy.docs:written",
+      files: [path],
+      correlationId: ctx.correlationId,
+    });
     return { files: [path] };
   },
 };

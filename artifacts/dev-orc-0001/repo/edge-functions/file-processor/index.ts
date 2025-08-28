@@ -9,14 +9,22 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE")!;
-    const supa = createClient(supabaseUrl, serviceRole, { auth: { persistSession: false } });
+    const supa = createClient(supabaseUrl, serviceRole, {
+      auth: { persistSession: false },
+    });
     const ch = supa.channel("lesiab:file");
-    await ch.send({ type: "broadcast", event: "processed", payload: { jobId: jobId ?? null, path: path ?? null } });
-    try { await ch.unsubscribe(); } catch {}
+    await ch.send({
+      type: "broadcast",
+      event: "processed",
+      payload: { jobId: jobId ?? null, path: path ?? null },
+    });
+    try {
+      await ch.unsubscribe();
+    } catch {}
   } catch {
     // ignore broadcast errors in MVP
   }
   return new Response(JSON.stringify({ ok: true, jobId: jobId ?? null }), {
-    headers: { "content-type": "application/json" }
+    headers: { "content-type": "application/json" },
   });
 });

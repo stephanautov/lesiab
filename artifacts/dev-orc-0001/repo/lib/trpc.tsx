@@ -22,9 +22,13 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
           // Optionally add headers() callback here if you later need auth headers.
-        })
-      ]
-    })
+        }),
+      ],
+    }),
   );
-  return <api.Provider client={client} queryClient={queryClient}>{children}</api.Provider>;
+  return (
+    <api.Provider client={client} queryClient={queryClient}>
+      {children}
+    </api.Provider>
+  );
 }

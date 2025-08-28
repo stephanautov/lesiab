@@ -23,7 +23,7 @@ export default function UploadsPage() {
         push(String(err?.message ?? "Upload failed"));
       }
     },
-    [createUrl, push]
+    [createUrl, push],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
@@ -34,7 +34,10 @@ export default function UploadsPage() {
       <h1 className="text-lg font-semibold">Direct Uploads</h1>
       <div
         {...getRootProps()}
-        className={"flex h-40 items-center justify-center rounded border border-dashed " + (isDragActive ? "bg-neutral-50" : "")}
+        className={
+          "flex h-40 items-center justify-center rounded border border-dashed " +
+          (isDragActive ? "bg-neutral-50" : "")
+        }
       >
         <input {...getInputProps()} />
         <p>Drag 'n' drop a file here, or click to select one</p>

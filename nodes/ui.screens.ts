@@ -24,7 +24,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 export interface NodeSpec<I = unknown, O = unknown> {
   id: NodeId;
@@ -50,13 +52,18 @@ const ProfileSchema = z.object({
 type Profile = z.infer<typeof ProfileSchema>;
 const InputSchema = z.object({ profile: ProfileSchema.optional() });
 
-export const UiScreensNode: NodeSpec<{ profile?: Profile } | unknown, { files: string[] }> = {
+export const UiScreensNode: NodeSpec<
+  { profile?: Profile } | unknown,
+  { files: string[] }
+> = {
   id: "ui.screens",
   phase: "codeGeneration",
   estimate: () => ({ tokens: 700, usd: 0.003 }),
   async run(input, ctx) {
     const parsed = InputSchema.safeParse(input);
-    const profile: Profile = parsed.success ? parsed.data.profile ?? { id: "app", entities: [] } : { id: "app", entities: [] };
+    const profile: Profile = parsed.success
+      ? (parsed.data.profile ?? { id: "app", entities: [] })
+      : { id: "app", entities: [] };
 
     const base = `artifacts/${ctx.orchestrationId}/repo`;
     const outputs: Array<{ path: string; content: string }> = [];
@@ -85,7 +92,10 @@ export default function FlowsLanding() {
   );
 }
 `);
-    outputs.push({ path: `${base}/app/(protected)/flows/page.tsx`, content: flowsPage });
+    outputs.push({
+      path: `${base}/app/(protected)/flows/page.tsx`,
+      content: flowsPage,
+    });
 
     // If entities exist, emit a simple per-entity page using tRPC hook placeholders.
     for (const ent of profile.entities) {
@@ -107,7 +117,10 @@ export default function ${ent.name[0].toUpperCase() + ent.name.slice(1)}Flow() {
   );
 }
 `);
-      outputs.push({ path: `${base}/app/(protected)/${ent.name}/page.tsx`, content: page });
+      outputs.push({
+        path: `${base}/app/(protected)/${ent.name}/page.tsx`,
+        content: page,
+      });
     }
 
     for (const f of outputs) {

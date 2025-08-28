@@ -1,7 +1,11 @@
 // path: server/trpc/context.ts
 // Context for tRPC procedures. Server-only code.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getServiceSupabase, getAccessTokenFromRequest, getUserServer } from "../../lib/auth";
+import {
+  getServiceSupabase,
+  getAccessTokenFromRequest,
+  getUserServer,
+} from "../../lib/auth";
 
 export type CreateContextOptions = { req: Request };
 

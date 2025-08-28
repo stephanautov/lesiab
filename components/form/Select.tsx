@@ -27,13 +27,19 @@ export function Select<T>({ control, name, label, options }: Props<T>) {
               value={field.value ?? ""}
               onChange={(e) => field.onChange(e.target.value)}
             >
-              <option value="" disabled>Choose…</option>
+              <option value="" disabled>
+                Choose…
+              </option>
               {options.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
               ))}
             </select>
             {fieldState.error ? (
-              <p className="text-xs text-red-600">{String(fieldState.error.message ?? "Invalid")}</p>
+              <p className="text-xs text-red-600">
+                {String(fieldState.error.message ?? "Invalid")}
+              </p>
             ) : null}
           </>
         )}

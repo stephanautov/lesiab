@@ -17,20 +17,21 @@ const REQUIRED_SERVER = [
   "SUPABASE_URL",
   "SUPABASE_SERVICE_ROLE",
   "OPENAI_API_KEY",
-  "ANTHROPIC_API_KEY"
+  "ANTHROPIC_API_KEY",
 ] as const;
 
 const REQUIRED_CLIENT = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  "NEXT_PUBLIC_APP_NAME"
+  "NEXT_PUBLIC_APP_NAME",
 ] as const;
 
 function checkEnv(names: readonly string[]): Check[] {
   return names.map((n) => ({
     name: n,
-    present: typeof process.env[n] === "string" && process.env[n]!.trim().length > 0,
-    value: process.env[n]
+    present:
+      typeof process.env[n] === "string" && process.env[n]!.trim().length > 0,
+    value: process.env[n],
   }));
 }
 
@@ -47,7 +48,9 @@ function printCliGuide() {
   console.log("\nSupabase CLI quick guide (local dev):");
   console.log("  1) Install CLI: https://supabase.com/docs/guides/cli");
   console.log("  2) Login:        supabase login");
-  console.log("  3) (Optional) Initialize/regen config: supabase init   # Will write supabase/config.toml");
+  console.log(
+    "  3) (Optional) Initialize/regen config: supabase init   # Will write supabase/config.toml",
+  );
   console.log("  4) Start local:  supabase start");
   console.log("  5) Apply local migrations: supabase db reset");
   console.log("\nLinking a remote project & pushing migrations:");
@@ -57,7 +60,9 @@ function printCliGuide() {
   console.log("  supabase functions deploy <name>");
   console.log("\nTips:");
   console.log("  - Keep '.env' and '.env.example' in sync.");
-  console.log("  - Vercel: set server & NEXT_PUBLIC_* env vars in project settings.");
+  console.log(
+    "  - Vercel: set server & NEXT_PUBLIC_* env vars in project settings.",
+  );
 }
 
 async function main() {
@@ -71,7 +76,9 @@ async function main() {
 
   const missing = [...server, ...client].filter((c) => !c.present);
   if (missing.length > 0) {
-    console.log("\nSome env vars are missing. Copy .env.example to .env and fill the blanks.");
+    console.log(
+      "\nSome env vars are missing. Copy .env.example to .env and fill the blanks.",
+    );
   } else {
     console.log("\nAll required env vars appear to be set. Good to go!");
   }

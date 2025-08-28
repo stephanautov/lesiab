@@ -25,7 +25,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 export interface NodeSpec<I = unknown, O = unknown> {
   id: NodeId;
@@ -75,7 +77,8 @@ Deno.serve(async (req) => {
 });
 `);
 
-    const fileProcessor = lf(`// path: supabase/functions/file-processor/index.ts
+    const fileProcessor =
+      lf(`// path: supabase/functions/file-processor/index.ts
 // Deno Edge Function: file processor (placeholder).
 // Expects JSON: { jobId?: string, path?: string }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";

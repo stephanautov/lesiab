@@ -9,11 +9,17 @@ export default function FlowsLanding() {
     <div className="p-4 space-y-3">
       <h1 className="text-xl font-semibold">Flows</h1>
       {items.length === 0 ? (
-        <p className="text-sm text-neutral-600">No complex flows defined yet.</p>
+        <p className="text-sm text-neutral-600">
+          No complex flows defined yet.
+        </p>
       ) : (
         <ul className="list-disc pl-5 text-sm">
           {items.map((it) => (
-            <li key={it.href}><Link className="underline" href={it.href}>{it.name}</Link></li>
+            <li key={it.href}>
+              <Link className="underline" href={it.href}>
+                {it.name}
+              </Link>
+            </li>
           ))}
         </ul>
       )}

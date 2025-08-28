@@ -23,7 +23,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 export interface NodeSpec<I = unknown, O = unknown> {
   id: NodeId;
@@ -75,28 +77,38 @@ function genRlsSql(profile: Profile): string {
     out.push(`begin`);
     out.push(`  if exists (`);
     out.push(`    select 1 from information_schema.columns`);
-    out.push(`    where table_schema = 'public' and table_name = '${table}' and column_name = 'owner_id'`);
+    out.push(
+      `    where table_schema = 'public' and table_name = '${table}' and column_name = 'owner_id'`,
+    );
     out.push(`  ) then`);
     out.push(`    if not exists (`);
-    out.push(`      select 1 from pg_policies where schemaname = 'public' and tablename = '${table}' and policyname = '${table}_select_owner'`);
+    out.push(
+      `      select 1 from pg_policies where schemaname = 'public' and tablename = '${table}' and policyname = '${table}_select_owner'`,
+    );
     out.push(`    ) then`);
     out.push(`      create policy "${table}_select_owner" on "${table}"`);
     out.push(`        for select using (owner_id = auth.uid());`);
     out.push(`    end if;`);
     out.push(`    if not exists (`);
-    out.push(`      select 1 from pg_policies where schemaname = 'public' and tablename = '${table}' and policyname = '${table}_insert_owner'`);
+    out.push(
+      `      select 1 from pg_policies where schemaname = 'public' and tablename = '${table}' and policyname = '${table}_insert_owner'`,
+    );
     out.push(`    ) then`);
     out.push(`      create policy "${table}_insert_owner" on "${table}"`);
     out.push(`        for insert with check (owner_id = auth.uid());`);
     out.push(`    end if;`);
     out.push(`    if not exists (`);
-    out.push(`      select 1 from pg_policies where schemaname = 'public' and tablename = '${table}' and policyname = '${table}_update_owner'`);
+    out.push(
+      `      select 1 from pg_policies where schemaname = 'public' and tablename = '${table}' and policyname = '${table}_update_owner'`,
+    );
     out.push(`    ) then`);
     out.push(`      create policy "${table}_update_owner" on "${table}"`);
     out.push(`        for update using (owner_id = auth.uid());`);
     out.push(`    end if;`);
     out.push(`    if not exists (`);
-    out.push(`      select 1 from pg_policies where schemaname = 'public' and tablename = '${table}' and policyname = '${table}_delete_owner'`);
+    out.push(
+      `      select 1 from pg_policies where schemaname = 'public' and tablename = '${table}' and policyname = '${table}_delete_owner'`,
+    );
     out.push(`    ) then`);
     out.push(`      create policy "${table}_delete_owner" on "${table}"`);
     out.push(`        for delete using (owner_id = auth.uid());`);
@@ -110,14 +122,19 @@ function genRlsSql(profile: Profile): string {
   return out.join("\n") + "\n";
 }
 
-export const SaRlsNode: NodeSpec<{ profile?: Profile } | unknown, { files: string[] }> = {
+export const SaRlsNode: NodeSpec<
+  { profile?: Profile } | unknown,
+  { files: string[] }
+> = {
   id: "sa.rls",
   phase: "execute",
   estimate: () => ({ tokens: 600, usd: 0.002 }),
   async run(input, ctx) {
     const root = `artifacts/${ctx.orchestrationId}/repo`;
     const parsed = InputSchema.safeParse(input);
-    const profile: Profile = parsed.success ? parsed.data.profile ?? { entities: [] } : { entities: [] };
+    const profile: Profile = parsed.success
+      ? (parsed.data.profile ?? { entities: [] })
+      : { entities: [] };
 
     const sql = genRlsSql(profile);
     const outPath = `${root}/supabase/migrations/0003_rls.sql`;

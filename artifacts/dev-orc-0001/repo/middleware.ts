@@ -23,5 +23,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/app/(protected)/(.*)"]
+  matcher: ["/app/(protected)/(.*)"],
 };

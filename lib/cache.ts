@@ -7,7 +7,8 @@ export function createLRU(capacity = 200) {
   function get(k: Key) {
     const v = map.get(k);
     if (v !== undefined) {
-      map.delete(k); map.set(k, v);
+      map.delete(k);
+      map.set(k, v);
     }
     return v;
   }
@@ -19,6 +20,8 @@ export function createLRU(capacity = 200) {
       map.delete(first);
     }
   }
-  function has(k: Key) { return map.has(k); }
+  function has(k: Key) {
+    return map.has(k);
+  }
   return { get, set, has };
 }

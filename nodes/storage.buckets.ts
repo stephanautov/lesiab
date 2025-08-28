@@ -23,7 +23,9 @@ export interface ExecutionContext {
   orchestrationId: OrchestrationId;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: { saveArtifact: (path: string, content: string | Uint8Array) => Promise<void> };
+  storage: {
+    saveArtifact: (path: string, content: string | Uint8Array) => Promise<void>;
+  };
 }
 export interface NodeSpec<I = unknown, O = unknown> {
   id: NodeId;
@@ -49,7 +51,8 @@ export const StorageBucketsNode: NodeSpec<unknown, { files: string[] }> = {
   async run(_input, ctx) {
     const root = `artifacts/${ctx.orchestrationId}/repo`;
 
-    const migration = lf(`-- Storage bucket + policies for user uploads (private by default)
+    const migration =
+      lf(`-- Storage bucket + policies for user uploads (private by default)
 -- Idempotent inserts to buckets table
 insert into storage.buckets (id, name, public)
 values ('user-uploads', 'user-uploads', false)
@@ -128,7 +131,10 @@ export async function createPresignedDownloadUrl(path: string, expiresInSeconds 
 `);
 
     const files = [
-      { path: `${root}/supabase/migrations/0002_storage.sql`, content: migration },
+      {
+        path: `${root}/supabase/migrations/0002_storage.sql`,
+        content: migration,
+      },
       { path: `${root}/lib/storage.ts`, content: storageTs },
     ];
 

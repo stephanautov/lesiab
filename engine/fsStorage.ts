@@ -3,7 +3,10 @@ import { promises as fs } from "fs";
 import * as path from "path";
 
 export interface Storage {
-  saveArtifact: (filePath: string, content: string | Uint8Array) => Promise<void>;
+  saveArtifact: (
+    filePath: string,
+    content: string | Uint8Array,
+  ) => Promise<void>;
 }
 
 export function createFsStorage(): Storage {
