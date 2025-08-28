@@ -20,6 +20,9 @@ export function Header() {
           <Link href="/flows" className="underline-offset-4 hover:underline">
             Flows
           </Link>
+          <Link href="/design" className="underline-offset-4 hover:underline">
+            Design
+          </Link>
         </nav>
       </div>
     </header>
