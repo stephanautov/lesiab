@@ -14,7 +14,12 @@ module.exports = {
     "plugin:@typescript-eslint/recommended",
     "prettier", // turn off stylistic rules that conflict with Prettier
   ],
-  ignorePatterns: ["node_modules/", ".next/", "artifacts/", "supabase/functions/**"],
+  ignorePatterns: [
+    "node_modules/",
+    ".next/",
+    "artifacts/",
+    "supabase/functions/**",
+  ],
   rules: {
     // keep the ruleset quiet while scaffolding
     "@typescript-eslint/no-explicit-any": "off",

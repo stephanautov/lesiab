@@ -1,8 +1,10 @@
 {
+  "/icon.svg/route": "/icon.svg",
   "/_not-found/page": "/_not-found",
   "/api/trpc/[trpc]/route": "/api/trpc/[trpc]",
-  "/(protected)/home/page": "/home",
   "/(protected)/flows/page": "/flows",
+  "/(protected)/home/page": "/home",
   "/(protected)/uploads/page": "/uploads",
+  "/page": "/",
   "/api/public/health/route": "/api/public/health"
 }

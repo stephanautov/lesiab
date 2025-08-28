@@ -1,6 +1,7 @@
 # LESiAB Project Structure
 
 ## Project Overview
+
 LESiAB is a comprehensive code generation and orchestration framework that creates full-stack applications with Next.js, Supabase, tRPC, and AI integrations.
 
 ## Root Directory Structure
@@ -157,22 +158,26 @@ C:\Users\seggu\LESiAB\
 ## Key Features
 
 ### 1. Orchestration Engine
+
 - **OrchestrationEngine.ts**: Production-ready orchestration with dependency resolution, retry logic, checkpointing, and budget controls
 - **Node-based architecture**: Modular code generation nodes for different aspects of the application
 
 ### 2. Full-Stack Application Generation
+
 - **Next.js App Router**: Modern React application structure
 - **Supabase Integration**: Database, authentication, storage, and edge functions
 - **tRPC**: Type-safe API layer between frontend and backend
 - **AI Integration**: OpenAI and Anthropic Claude for code generation and embeddings
 
 ### 3. Development Tools
+
 - **TypeScript**: Full type safety across the entire stack
 - **ESLint & Prettier**: Code quality and formatting
 - **pnpm**: Fast, efficient package management
 - **Vercel**: Deployment configuration
 
 ### 4. Generated Features
+
 - Authentication and authorization
 - File upload and storage
 - Real-time functionality
