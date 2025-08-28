@@ -3,7 +3,7 @@
 // Expects JSON: { jobId?: string, path?: string }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: { json: () => Promise<any> }) => {
   const { jobId, path } = await req.json().catch(() => ({}));
   // TODO: fetch file from Storage and process; for MVP we ack and broadcast only.
   try {

@@ -237,7 +237,7 @@ export class ValidationError extends OrchestrationError {
     message: string,
     public readonly errors: z.ZodError,
   ) {
-    super(message, "VALIDATION_ERROR", undefined, { errors: errors.errors });
+    super(message, "VALIDATION_ERROR", undefined, { errors: errors.issues });
   }
 }
 
@@ -398,7 +398,7 @@ export class TaskPool {
 
     // Wait for permits to be available
     while (this.available < n) {
-      await new Promise<void>((resolve) => this.waiting.push(resolve));
+      await new Promise<void>((resolve) => this.waiting.push(() => resolve()));
     }
 
     this.available -= n;
@@ -770,7 +770,7 @@ export class CheckpointManager {
     return {
       phase: raw.phase,
       batchIndex: raw.batchIndex,
-      completedNodes: new Set<NodeId>(raw.completedNodes || []),
+      completedNodes: new Set<NodeId>((raw.completedNodes || []) as NodeId[]),
       stateBlob: raw.stateBlob,
       updatedAt: new Date(raw.updatedAt),
     };
@@ -1202,11 +1202,11 @@ export class OrchestrationEngine {
         const batchTimer = this.metrics.startTimer("batch_duration");
 
         // Track phase distribution
-        const batchPhase = this.getPhaseForBatch(args.blueprint, batch);
-        phaseCount[batchPhase] += batch.length;
+        const batchPhase = this.getPhaseForBatch(args.blueprint, batch || []);
+        phaseCount[batchPhase] += (batch || []).length;
 
         // Filter out already completed nodes
-        const remainingNodes = batch.filter(
+        const remainingNodes = (batch || []).filter(
           (nodeId) => !completedNodes.has(nodeId),
         );
 
@@ -1241,7 +1241,7 @@ export class OrchestrationEngine {
 
             // Update checkpoint after each node completion
             await context.checkpoint.save({
-              phase: this.getPhaseForBatch(args.blueprint, batch),
+              phase: this.getPhaseForBatch(args.blueprint, batch || []),
               batchIndex,
               completedNodes,
               stateBlob: { input: args.input },
@@ -1269,9 +1269,10 @@ export class OrchestrationEngine {
         const failed = results.filter((r) => r.status === "rejected");
 
         if (failed.length > 0) {
+          const firstFailed = failed[0]!;
           const error =
-            failed[0].status === "rejected"
-              ? failed[0].reason
+            firstFailed.status === "rejected"
+              ? (firstFailed as PromiseRejectedResult).reason
               : new Error("Batch execution failed");
           logger.error(
             `Batch ${batchIndex} had ${failed.length} failures`,
@@ -1293,7 +1294,7 @@ export class OrchestrationEngine {
           await context.checkpoint.save({
             phase: this.getPhaseForBatch(
               args.blueprint,
-              batches[batchIndex + 1],
+              batches[batchIndex + 1] || [],
             ),
             batchIndex: batchIndex + 1,
             completedNodes: new Set(),
@@ -1562,9 +1563,11 @@ export class OrchestrationEngine {
       {} as Record<Phase, number>,
     );
 
-    return Object.entries(phaseCounts).sort(
-      ([, a], [, b]) => b - a,
-    )[0][0] as Phase;
+    return (
+      (Object.entries(phaseCounts).sort(
+        ([, a], [, b]) => b - a,
+      )[0]?.[0] as Phase) || "execute"
+    );
   }
 
   /**

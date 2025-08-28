@@ -50,7 +50,7 @@ async function embedAnthropic(
   return embedOpenAI(texts, apiKey);
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: { json: () => Promise<any> }) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE")!;
   const supa = createClient(supabaseUrl, serviceRole, {

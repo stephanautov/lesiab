@@ -18,15 +18,13 @@ export async function jsonMessage<T = unknown>(
   system = "Return strict JSON only. No prose.",
 ): Promise<JsonOk<T> | JsonErr> {
   const client = getAnthropic();
-  const model = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20240620";
+  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
 
   const msg = await client.messages.create({
     model,
-    max_tokens: 1024,
+    max_tokens: 4024,
     system,
     messages: [{ role: "user", content: prompt }],
-    // If supported, prefer structured JSON mode:
-    // @ts-ignore - newer SDKs support response_format; ignore if not available
     response_format: { type: "json_object" },
   } as any);
 

@@ -1,17 +1,17 @@
 "use client";
 import * as React from "react";
-import { Controller, type Control } from "react-hook-form";
+import { Controller, FieldValues, Path, type Control } from "react-hook-form";
 import { Label } from "../ui/label";
 
-type Props<T> = {
+type Props<T extends FieldValues> = {
   control: Control<T>;
-  name: keyof T & string;
+  name: Path<T>;
   label?: string;
   placeholder?: string;
   rows?: number;
 };
 
-export function TextArea<T>({
+export function TextArea<T extends FieldValues>({
   control,
   name,
   label,

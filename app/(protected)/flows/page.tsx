@@ -4,7 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 
 export default function FlowsLanding() {
-  const items = [];
+  // Explicitly type to satisfy noImplicitAny
+  const items: { name: string; href: string }[] = [];
   return (
     <div className="p-4 space-y-3">
       <h1 className="text-xl font-semibold">Flows</h1>

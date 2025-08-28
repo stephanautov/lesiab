@@ -1,6 +1,30 @@
 {
   "version": 3,
-  "middleware": {},
+  "middleware": {
+    "/": {
+      "files": [
+        "server/edge-runtime-webpack.js",
+        "server/middleware.js"
+      ],
+      "name": "middleware",
+      "page": "/",
+      "matchers": [
+        {
+          "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?\\/app(?:\\/(protected))(?:\\/(.*))(\\.json)?[\\/#\\?]?$",
+          "originalSource": "/app/(protected)/(.*)"
+        }
+      ],
+      "wasm": [],
+      "assets": [],
+      "env": {
+        "__NEXT_BUILD_ID": "QKrjGI_fLa0VpJLR-kpe8",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "j7t3a76ZS2HO5h+E5UiuZ7zBDUL9VhpIRvu/W49+MQg=",
+        "__NEXT_PREVIEW_MODE_ID": "98bba61c81a7ef21ce5e6b1f24f6e649",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "95b01bb9ce57de15760261215da2852db50a4f2bd88b124a5c07d6d80c09ae33",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "5660972c069ce4b4078c34a7a312df1cf9854baf9b6a532cd01908da8f8472b5"
+      }
+    }
+  },
   "functions": {
     "/api/public/health/route": {
       "files": [
@@ -24,13 +48,15 @@
       "wasm": [],
       "assets": [],
       "env": {
-        "__NEXT_BUILD_ID": "development",
+        "__NEXT_BUILD_ID": "QKrjGI_fLa0VpJLR-kpe8",
         "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "j7t3a76ZS2HO5h+E5UiuZ7zBDUL9VhpIRvu/W49+MQg=",
-        "__NEXT_PREVIEW_MODE_ID": "96d5485105f51dceb352caae760a180e",
-        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "f93bb6483df17b2dce5d60c83f126a1f627562a621581939efcef717e5e2a3f7",
-        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "07c457a329295ef9f32de6daf27fa4bcb2b552f68c9860f48b16ec36af9d7987"
+        "__NEXT_PREVIEW_MODE_ID": "98bba61c81a7ef21ce5e6b1f24f6e649",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "95b01bb9ce57de15760261215da2852db50a4f2bd88b124a5c07d6d80c09ae33",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "5660972c069ce4b4078c34a7a312df1cf9854baf9b6a532cd01908da8f8472b5"
       }
     }
   },
-  "sortedMiddleware": []
+  "sortedMiddleware": [
+    "/"
+  ]
 }

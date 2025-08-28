@@ -2,6 +2,7 @@
 // path: lib/trpc.tsx
 import * as React from "react";
 import { createTRPCReact, httpBatchLink } from "@trpc/react-query";
+import superjson from "superjson";
 import type { AppRouter } from "../server/trpc/router";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -21,6 +22,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
       links: [
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
+          transformer: superjson,
           // Optionally add headers() callback here if you later need auth headers.
         }),
       ],

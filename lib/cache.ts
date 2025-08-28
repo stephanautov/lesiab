@@ -17,7 +17,9 @@ export function createLRU(capacity = 200) {
     map.set(k, v);
     if (map.size > capacity) {
       const first = map.keys().next().value;
-      map.delete(first);
+      if (first !== undefined) {
+        map.delete(first);
+      }
     }
   }
   function has(k: Key) {

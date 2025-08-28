@@ -12,9 +12,9 @@ const handler = (req: Request) =>
     req,
     router: appRouter,
     createContext: ({ req }) => createTRPCContext({ req }),
-    onError({ error, path }) {
+    onError({ error: _error, path: _path }) {
       // Optional: basic logging hook (kept deterministic)
-      // console.error("tRPC error on", path, error);
+      console.error("tRPC error on", _path, _error);
     },
   });
 

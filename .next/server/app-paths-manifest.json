@@ -1,4 +1,8 @@
 {
-  "/api/public/health/route": "app/api/public/health/route.js",
-  "/_not-found/page": "app/_not-found/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/trpc/[trpc]/route": "app/api/trpc/[trpc]/route.js",
+  "/(protected)/home/page": "app/(protected)/home/page.js",
+  "/(protected)/flows/page": "app/(protected)/flows/page.js",
+  "/(protected)/uploads/page": "app/(protected)/uploads/page.js",
+  "/api/public/health/route": "app/api/public/health/route.js"
 }

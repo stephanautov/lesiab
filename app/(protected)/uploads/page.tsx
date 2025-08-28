@@ -40,7 +40,7 @@ export default function UploadsPage() {
         }
       >
         <input {...getInputProps()} />
-        <p>Drag 'n' drop a file here, or click to select one</p>
+        <p>Drag &apos;n&apos; drop a file here, or click to select one</p>
       </div>
     </div>
   );

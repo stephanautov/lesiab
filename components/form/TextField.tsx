@@ -1,17 +1,22 @@
 "use client";
 import * as React from "react";
-import { Controller, type Control } from "react-hook-form";
+import { Controller, FieldValues, type Control } from "react-hook-form";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
-type Props<T> = {
+type Props<T extends FieldValues> = {
   control: Control<T>;
   name: keyof T & string;
   label?: string;
   placeholder?: string;
 };
 
-export function TextField<T>({ control, name, label, placeholder }: Props<T>) {
+export function TextField<T extends FieldValues>({
+  control,
+  name,
+  label,
+  placeholder,
+}: Props<T>) {
   return (
     <div className="space-y-1">
       {label ? <Label htmlFor={name}>{label}</Label> : null}

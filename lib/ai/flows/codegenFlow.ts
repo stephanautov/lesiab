@@ -51,6 +51,10 @@ export async function analyzeRequest(
   return { request: req, proposed: [], synthesized: [], verified: false };
 }
 
+function analyzeStart(state: CodegenState): Promise<CodegenState> {
+  return analyzeRequest(state.request);
+}
+
 /** Stage (b) — propose files */
 export async function proposeFiles(state: CodegenState): Promise<CodegenState> {
   const { request } = state;
@@ -126,13 +130,22 @@ export function buildCodegenFlow(tools: CodegenTools) {
       // Dynamic import to avoid hard dependency during bootstrap
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const mod: any = await import("@langchain/langgraph");
-      const StateGraph = mod.StateGraph ?? mod.ExperimentalStateGraph ?? null;
-      const START = mod.START ?? "START";
-      const END = mod.END ?? "END";
-      if (!StateGraph) return null;
+      type GraphAPI<T> = {
+        addNode(name: string, fn: (s: T) => Promise<T> | T): GraphAPI<T>;
+        addEdge(from: string, to: string): GraphAPI<T>;
+        compile(): { invoke(initial: T): Promise<T> };
+      };
+      type GraphCtor<T> = new (opts: any) => GraphAPI<T>;
 
-      const graph = new StateGraph<CodegenState>({ channels: {} })
-        .addNode("analyzeRequest", analyzeRequest)
+      const StateGraphCtor = (mod.StateGraph ??
+        mod.ExperimentalStateGraph) as GraphCtor<CodegenState> | null;
+      if (!StateGraphCtor) return null;
+
+      const START: string = (mod.START ?? "START") as string;
+      const END: string = (mod.END ?? "END") as string;
+
+      const graph = new StateGraphCtor({ channels: {} })
+        .addNode("analyzeRequest", analyzeStart)
         .addNode("proposeFiles", proposeFiles)
         .addNode("synthesizeContent", synthesizeContent)
         .addNode("verifyTypes", verifyTypes)

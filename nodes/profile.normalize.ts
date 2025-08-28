@@ -96,7 +96,7 @@ export type Profile = z.infer<typeof ProfileSchema>;
 const InputSchema = z.union([
   z.string().min(1),
   z.object({ description: z.string().min(1) }).strict(),
-  z.record(z.any()),
+  z.record(z.string(), z.any()),
 ]);
 
 /** ─────────────────────────────────────────────────────────────────────────────

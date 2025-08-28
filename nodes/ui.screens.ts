@@ -105,7 +105,7 @@ import * as React from "react";
 import { api } from "../../lib/trpc";
 import { DataTable } from "../../components/data-table";
 
-export default function ${ent.name[0].toUpperCase() + ent.name.slice(1)}Flow() {
+export default function ${ent.name.charAt(0).toUpperCase() + ent.name.slice(1)}Flow() {
   // Expected to exist after CRUD routers are generated:
   // const { data = [] } = api.${ent.name}.list.useQuery();
   const data: any[] = [];
