@@ -1,0 +1,25 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="200" viewBox="0 0 600 200">
+  <defs>
+    <linearGradient id="grad-seedapp" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF6E8C" />
+      <stop offset="50%" stop-color="#FF9A4C" />
+      <stop offset="100%" stop-color="#6A2AE0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Seed sprout stem -->
+  <path d="M70 110 C50 70 50 70 50 70" stroke="url(#grad-seedapp)" stroke-width="10"
+        fill="none" stroke-linecap="round"/>
+
+  <!-- Seed circle -->
+  <circle cx="50" cy="70" r="16" fill="url(#grad-seedapp)" />
+
+  <!-- App window (rounded square) -->
+  <path d="M90 60 L140 60 Q160 60 160 80 L160 130 L90 130 Q70 130 70 110"
+        fill="url(#grad-seedapp)"/>
+
+  <!-- Wordmark with lowercase i -->
+  <text x="220" y="125" font-family="Inter, sans-serif" font-size="72"
+        letter-spacing="2" fill="#2B2633">BAiSEL</text>
+</svg>
