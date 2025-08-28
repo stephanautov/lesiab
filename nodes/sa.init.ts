@@ -55,27 +55,41 @@ export const SaInitNode: NodeSpec<unknown, { files: string[] }> = {
 
     // Minimal, deterministic Supabase config (safe placeholder for MVP)
     // Developers may run `supabase init` later to replace with a project-specific config.
-    const configToml = lf(`# Supabase config (MVP placeholder)
-# This file is deterministic and generic. For a real project config, you can run:
-#   supabase init
-# which will generate a project-specific config.toml. Until then, this suffices for local dev.
+    const configToml = lf(`# supabase/config.toml — minimal, schema-correct, deterministic
 
-project_id = ""        # Optional; set after 'supabase link'
-project_ref = ""       # Optional; set after 'supabase link'
-studio_port = 54323
-api_port = 54321
-db_port = 54322
+project_id = "lesiab"
 
 [api]
-enabled = true
-
-[studio]
-enabled = true
+# Next two are the CLI defaults; keep them explicit for clarity:
+port = 54321
+max_rows = 1000
 
 [db]
-# Align with a stable Postgres major that Supabase uses; version string here is informational.
-version = "15"
-shadow = true
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+# Optional local mail UI; these are the CLI defaults:
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+admin_email = "admin@email.com"
+sender_name = "Admin"
+
+# Map our non-default function locations under edge-functions/
+[functions.cron]
+entrypoint = "edge-functions/cron/index.ts"
+
+[functions.queue]
+entrypoint = "edge-functions/queue/index.ts"
+
+[functions.embeddings]
+entrypoint = "edge-functions/embeddings/index.ts"
+
+[functions.file-processor]
+entrypoint = "edge-functions/file-processor/index.ts"
 `);
 
     // A small helper script to sanity-check env and print CLI steps

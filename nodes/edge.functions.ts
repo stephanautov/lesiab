@@ -10,8 +10,8 @@
  * Inputs (optional): none (placeholders; wire specifics later).
  *
  * Outputs:
- *  - artifacts/${orc}/repo/edge-functions/embeddings/index.ts
- *  - artifacts/${orc}/repo/edge-functions/file-processor/index.ts
+ *  - artifacts/${orc}/repo/supabase/functions/embeddings/index.ts
+ *  - artifacts/${orc}/repo/supabase/functions/file-processor/index.ts
  *
  * Notes:
  *  - These run on Deno. Use ESM imports.
@@ -48,9 +48,9 @@ export const EdgeFunctionsNode: NodeSpec<unknown, { files: string[] }> = {
   phase: "execute",
   estimate: () => ({ tokens: 420, usd: 0.002 }),
   async run(_input, ctx) {
-    const root = `artifacts/${ctx.orchestrationId}/repo/edge-functions`;
+    const root = `artifacts/${ctx.orchestrationId}/repo/supabase/functions`;
 
-    const embeddings = lf(`// path: edge-functions/embeddings/index.ts
+    const embeddings = lf(`// path: supabase/functions/embeddings/index.ts
 // Deno Edge Function: embeddings (placeholder).
 // Expects JSON: { jobId?: string, text?: string }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
 });
 `);
 
-    const fileProcessor = lf(`// path: edge-functions/file-processor/index.ts
+    const fileProcessor = lf(`// path: supabase/functions/file-processor/index.ts
 // Deno Edge Function: file processor (placeholder).
 // Expects JSON: { jobId?: string, path?: string }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";

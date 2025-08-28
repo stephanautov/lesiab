@@ -8,8 +8,8 @@
  *  - Provide a server helper to enqueue jobs via Supabase Functions REST.
  *
  * Outputs:
- *  - artifacts/${orc}/repo/edge-functions/cron/index.ts
- *  - artifacts/${orc}/repo/edge-functions/queue/index.ts
+ *  - artifacts/${orc}/repo/supabase/functions/cron/index.ts
+ *  - artifacts/${orc}/repo/supabase/functions/queue/index.ts
  *  - artifacts/${orc}/repo/lib/queue.ts
  *
  * Notes:
@@ -47,10 +47,10 @@ export const CronQueueSetupNode: NodeSpec<unknown, { files: string[] }> = {
   phase: "execute",
   estimate: () => ({ tokens: 360, usd: 0.0015 }),
   async run(_input, ctx) {
-    const rootEf = `artifacts/${ctx.orchestrationId}/repo/edge-functions`;
+    const rootEf = `artifacts/${ctx.orchestrationId}/repo/supabase/functions`;
     const rootLib = `artifacts/${ctx.orchestrationId}/repo/lib`;
 
-    const cron = lf(`// path: edge-functions/cron/index.ts
+    const cron = lf(`// path: supabase/functions/cron/index.ts
 // Deno Edge Function for scheduled tasks.
 // Configure schedule in Supabase dashboard -> Edge Functions -> Schedule.
 Deno.serve(async (_req) => {
@@ -60,7 +60,7 @@ Deno.serve(async (_req) => {
 });
 `);
 
-    const queue = lf(`// path: edge-functions/queue/index.ts
+    const queue = lf(`// path: supabase/functions/queue/index.ts
 // Deno Edge Function to accept enqueued jobs.
 // Expects JSON: { jobName: string, payload: unknown, delaySeconds?: number }
 Deno.serve(async (req) => {

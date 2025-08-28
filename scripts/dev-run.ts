@@ -18,6 +18,21 @@ import SaRlsNode from "../nodes/sa.rls";
 import RealtimeChannelsNode from "../nodes/realtime.channels";
 import CronQueueSetupNode from "../nodes/cron.queue.setup";
 import EdgeFunctionsNode from "../nodes/edge.functions";
+import TrpcServer from "../nodes/trpc.server";
+import RestPublic from "../nodes/rest.public";
+import TrpcClientNode from "../nodes/trpc.client";
+import NextAppRouterNode from "../nodes/next.app.router";
+import UploadDirectNode from "../nodes/upload.direct";
+import AiOpenaiSetupNode from "../nodes/ai.openai.setup";
+import AiAnthropicSetupNode from "../nodes/ai.anthropic.setup";
+import AiLanggraphFlowNode from "../nodes/ai.langgraph.flow";
+import AiEmbedderNode from "../nodes/ai.embedder";
+import RealtimeClientNode from "../nodes/realtime.client";
+import UiScreensNode from "../nodes/ui.screens";
+import VercelConfigNode from "../nodes/vercel.config";
+import MonitoringBasicsNode from "../nodes/monitoring.basics";
+import GithubSetup from "../nodes/github.setup";
+import DeployDocs from "../nodes/deploy.docs";
 
 // Minimal ExecutionContext
 const storage = createFsStorage();
@@ -64,9 +79,31 @@ async function run() {
     await CronQueueSetupNode.run({}, ctx);
     await EdgeFunctionsNode.run({}, ctx);
 
-    console.log(
-        `\n✔ Completed Batches 0–3.\nArtifacts are in artifacts/${orchestrationId}/repo.\nNext: run materializer to copy them into your working tree (optional).`
-    );
+    // --- Batch 6: trpc.server, rest.public ---
+    await TrpcServer.run({}, ctx);
+    await RestPublic.run({}, ctx);
+
+    // --- Batch 7: trpc.client, next.app.router, upload.direct, ai.openai.setup, ai.anthropic.setup ---
+    await TrpcClientNode.run({}, ctx);
+    await NextAppRouterNode.run({}, ctx);
+    await UploadDirectNode.run({}, ctx);
+    await AiOpenaiSetupNode.run({}, ctx);
+    await AiAnthropicSetupNode.run({}, ctx);
+
+    // --- Batch 8: ai.langgraph.flow, ai.embedder, realtime.client, ui.screens ---
+    await AiLanggraphFlowNode.run({}, ctx);
+    await AiEmbedderNode.run({}, ctx);
+    await RealtimeClientNode.run({}, ctx);
+    await UiScreensNode.run({ profile: { id: "app", entities: [] } }, ctx);
+
+    // --- Batch 9: vercel.config, monitoring.basics ---
+    await VercelConfigNode.run({}, ctx);
+    await MonitoringBasicsNode.run({}, ctx);
+
+    // --- Batch 10: github.setup, deploy.docs ---
+    await GithubSetup.run({}, ctx);
+    await DeployDocs.run({}, ctx);
+
 }
 
 run().catch((err) => {

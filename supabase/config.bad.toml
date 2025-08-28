@@ -1,0 +1,21 @@
+# Supabase config (MVP placeholder)
+# This file is deterministic and generic. For a real project config, you can run:
+#   supabase init
+# which will generate a project-specific config.toml. Until then, this suffices for local dev.
+
+project_id = ""        # Optional; set after 'supabase link'
+project_ref = ""       # Optional; set after 'supabase link'
+studio_port = 54323
+api_port = 54321
+db_port = 54322
+
+[api]
+enabled = true
+
+[studio]
+enabled = true
+
+[db]
+# Align with a stable Postgres major that Supabase uses; version string here is informational.
+version = "15"
+shadow = true

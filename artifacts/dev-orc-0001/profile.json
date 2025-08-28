@@ -1,0 +1,10 @@
+{
+  "id": "app",
+  "version": "1.0.0",
+  "entities": [],
+  "routes": [],
+  "llm": {
+    "providerPreference": "openai",
+    "useLangGraph": true
+  }
+}

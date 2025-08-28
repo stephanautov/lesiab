@@ -10,7 +10,7 @@
  *
  * Outputs:
  *  - artifacts/${orc}/repo/server/trpc/embeddings.router.ts
- *  - artifacts/${orc}/repo/edge-functions/embeddings/index.ts   (extends/overwrites MVP stub)
+ *  - artifacts/${orc}/repo/supabase/functions/embeddings/index.ts   (extends/overwrites MVP stub)
  *
  * Assumptions:
  *  - pgvector extension is enabled (done in db.schema).
@@ -106,7 +106,7 @@ export const embeddingsRouter = createTRPCRouter({
 //   });
 `);
 
-const EDGE_TS = lf(`// path: edge-functions/embeddings/index.ts
+const EDGE_TS = lf(`// path: supabase/functions/embeddings/index.ts
 // Deno Edge Function: embeddings
 // Splits text, calls provider embeddings, upserts into pgvector, and broadcasts completion.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -197,7 +197,7 @@ export const AiEmbedderNode: NodeSpec<unknown, { files: string[] }> = {
   async run(_input, ctx) {
     const base = `artifacts/${ctx.orchestrationId}/repo`;
     const routerPath = `${base}/server/trpc/embeddings.router.ts`;
-    const edgePath = `${base}/edge-functions/embeddings/index.ts`;
+    const edgePath = `${base}/supabase/functions/embeddings/index.ts`;
     await ctx.storage.saveArtifact(routerPath, ROUTER_TS);
     await ctx.storage.saveArtifact(edgePath, EDGE_TS);
     ctx.logger.info({
