@@ -8,6 +8,7 @@ LESiAB is a comprehensive code generation and orchestration framework that creat
 ```
 C:\Users\seggu\LESiAB\
 ├── DEPLOY.md                           # Deployment documentation
+├── PROJECT_STRUCTURE.md               # This file - project structure documentation
 ├── README.md                           # Project documentation
 ├── package.json                        # Node.js dependencies and scripts
 ├── pnpm-lock.yaml                     # PNPM lock file
@@ -41,10 +42,13 @@ C:\Users\seggu\LESiAB\
 │   │           └── route.ts          # tRPC API handler
 │   ├── analytics.tsx                 # Analytics component
 │   ├── globals.css                   # Global styles
+│   ├── icon.svg                      # Application icon
 │   ├── layout.tsx                    # Root layout component
+│   ├── page.tsx                      # Root page component
 │   └── providers.tsx                 # React providers wrapper
 │
 ├── components/                        # Reusable React components
+│   ├── Header.tsx                    # Header component
 │   ├── data-table.tsx                # Data table component
 │   ├── form/                         # Form components
 │   │   ├── Select.tsx               # Select input
