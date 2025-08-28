@@ -1,1 +1,33 @@
-globalThis.__BUILD_MANIFEST={polyfillFiles:["static/chunks/polyfills-42372ed130431b0a.js"],devFiles:[],ampDevFiles:[],lowPriorityFiles:[],rootMainFiles:["static/chunks/webpack-87c53e47523a61e9.js","static/chunks/2c913ea3-f77b522ca87815ac.js","static/chunks/341-2d546ef92ef35bc1.js","static/chunks/main-app-522d3322d3d4e807.js"],rootMainFilesTree:{},pages:{"/_app":["static/chunks/webpack-87c53e47523a61e9.js","static/chunks/framework-bd73bd4577f9a203.js","static/chunks/main-81d5f0d040faf1c8.js","static/chunks/pages/_app-3b6734196812ff37.js"],"/_error":["static/chunks/webpack-87c53e47523a61e9.js","static/chunks/framework-bd73bd4577f9a203.js","static/chunks/main-81d5f0d040faf1c8.js","static/chunks/pages/_error-a608d72427fcff70.js"]},ampFirstPages:[]},globalThis.__BUILD_MANIFEST.lowPriorityFiles=["/static/"+process.env.__NEXT_BUILD_ID+"/_buildManifest.js",,"/static/"+process.env.__NEXT_BUILD_ID+"/_ssgManifest.js"];
+((globalThis.__BUILD_MANIFEST = {
+  polyfillFiles: ["static/chunks/polyfills-42372ed130431b0a.js"],
+  devFiles: [],
+  ampDevFiles: [],
+  lowPriorityFiles: [],
+  rootMainFiles: [
+    "static/chunks/webpack-87c53e47523a61e9.js",
+    "static/chunks/2c913ea3-f77b522ca87815ac.js",
+    "static/chunks/341-2d546ef92ef35bc1.js",
+    "static/chunks/main-app-522d3322d3d4e807.js",
+  ],
+  rootMainFilesTree: {},
+  pages: {
+    "/_app": [
+      "static/chunks/webpack-87c53e47523a61e9.js",
+      "static/chunks/framework-bd73bd4577f9a203.js",
+      "static/chunks/main-81d5f0d040faf1c8.js",
+      "static/chunks/pages/_app-3b6734196812ff37.js",
+    ],
+    "/_error": [
+      "static/chunks/webpack-87c53e47523a61e9.js",
+      "static/chunks/framework-bd73bd4577f9a203.js",
+      "static/chunks/main-81d5f0d040faf1c8.js",
+      "static/chunks/pages/_error-a608d72427fcff70.js",
+    ],
+  },
+  ampFirstPages: [],
+}),
+  (globalThis.__BUILD_MANIFEST.lowPriorityFiles = [
+    "/static/" + process.env.__NEXT_BUILD_ID + "/_buildManifest.js",
+    ,
+    "/static/" + process.env.__NEXT_BUILD_ID + "/_ssgManifest.js",
+  ]));
