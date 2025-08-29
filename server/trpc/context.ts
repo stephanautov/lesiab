@@ -8,12 +8,21 @@ import {
   getUserServer,
 } from "../../lib/auth-server";
 
-// Whatever shape you already expose on ctx (add/keep what you need)
+function getAccessTokenFromAuthHeader(req: Request): string | undefined {
+  const auth =
+    req.headers.get("authorization") ?? req.headers.get("Authorization");
+  if (!auth) return undefined;
+  const [scheme, token] = auth.split(" ");
+  if (!scheme || !token) return undefined;
+  if (scheme.toLowerCase() !== "bearer") return undefined;
+  return token;
+}
+
 export async function createTRPCContext(opts: FetchCreateContextFnOptions) {
   const { req } = opts;
   const supabaseAdmin = getServiceSupabase();
 
-  // 1) Preferred: SSR client reads cookies and returns the user
+  // 1) Preferred: SSR client reads cookies
   let user: Awaited<ReturnType<typeof getUserServer>> | null = null;
   try {
     const ssr = await getSupabaseServer();
@@ -22,19 +31,22 @@ export async function createTRPCContext(opts: FetchCreateContextFnOptions) {
       user = data.user;
     }
   } catch {
-    // ignore; we’ll fallback
+    // ignore; fallbacks below
   }
 
-  // 2) Fallback: manually extract access token cookie and verify via admin client
+  // 2) Fallbacks: cookie access token, then Authorization header
   if (!user) {
-    const token = getAccessTokenFromRequest(req);
+    const cookieToken = getAccessTokenFromRequest(req);
+    const headerToken = getAccessTokenFromAuthHeader(req);
+    const token = cookieToken ?? headerToken;
     user = await getUserServer(token);
   }
 
   return {
     req,
-    supabase: supabaseAdmin, // admin client (bypasses RLS; use for server ops)
-    user, // <- presence of this gates protectedProcedure
+    supabase: supabaseAdmin, // admin client for server ops
+    user, // presence gates protectedProcedure
   };
 }
 export type TRPCContext = inferAsyncReturnType<typeof createTRPCContext>;
+export type Context = TRPCContext; // (optional alias)
