@@ -41,7 +41,6 @@
     "@types/node-fetch": "^2.6.13",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.8",
-    "@types/react-dropzone": "^5.1.0",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
     "autoprefixer": "^10.4.21",

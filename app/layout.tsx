@@ -1,4 +1,4 @@
-// path: app/layout.tsx
+// path: app/layout.tsx (ensure CSS import present)
 import "./globals.css";
 import Link from "next/link";
 
