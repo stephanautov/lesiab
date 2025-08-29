@@ -90,12 +90,27 @@ const MaterializeRepoNode: NodeSpec<
       files: entries,
     };
 
+    // Write manifest for this run
     const manifestPath = `artifacts/${ctx.orchestrationId}${runId}/manifest.json`;
     await ctx.storage.saveArtifact(manifestPath, stableStringify(manifest));
     ctx.logger.info({
       msg: "materialize.repo:manifest_written",
       path: manifestPath,
       count: entries.length,
+    });
+
+    // ALSO write/update a "latest" pointer outside the run folder
+    // Important: use a path that does NOT match the run injection rule in storage.ts
+    const latestPath = `artifacts/refs/${ctx.orchestrationId}/latest.json`;
+    const latest = {
+      orchestrationId: ctx.orchestrationId,
+      runId: input?.runId ?? null,
+      manifestPath,
+    };
+    await ctx.storage.saveArtifact(latestPath, stableStringify(latest));
+    ctx.logger.info({
+      msg: "materialize.repo:latest_written",
+      path: latestPath,
     });
 
     return { manifestPath, count: entries.length };

@@ -1,29 +1,16 @@
 // path: scripts/materialize-from-storage.mjs
-/**
- * One-shot materializer:
- *  Downloads artifacts/<orc>/manifest.json, then fetches each storage object and
- *  writes it into the working repo at its original path (stripping the "repo/" prefix).
- *
- * Usage:
- *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE=... node scripts/materialize-from-storage.mjs <orchestrationId> [--dry]
- *
- * Notes:
- *  - Requires service role or a key with access to the "artifacts" bucket.
- *  - Recreates dynamic route segments: any path segment that looks like "_name_"
- *    will be written as "[name]" (reverse of the sanitizer used for Storage keys).
- */
 import { createClient } from "@supabase/supabase-js";
 import { writeFile, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-const [, , ORC, flagDry] = process.argv;
-const DRY = flagDry === "--dry";
+const [, , ORC, RUN] = process.argv;
 if (!ORC) {
   console.error(
-    "Usage: SUPABASE_URL=... SUPABASE_SERVICE_ROLE=... node scripts/materialize-from-storage.mjs <orchestrationId> [--dry]",
+    "Usage: SUPABASE_URL=... SUPABASE_SERVICE_ROLE=... node scripts/materialize-from-storage.mjs <orchestrationId> [runId] [--dry]",
   );
   process.exit(1);
 }
+const DRY = process.argv.includes("--dry");
 
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE;
@@ -34,42 +21,49 @@ if (!url || !key) {
 const supa = createClient(url, key, { auth: { persistSession: false } });
 
 function desegment(seg) {
-  // reverse the sanitizer rule for bracketed Next.js segments:
-  // "_trpc_" -> "[trpc]", "_id_" -> "[id]"
   const m = /^_(.+)_$/.exec(seg);
   return m ? `[${m[1]}]` : seg;
 }
-
 function toLocalPath(originalPath) {
-  // Strip "repo/" prefix; write into cwd
   const rel = originalPath.replace(/^repo\//, "");
-  const parts = rel.split("/").map(desegment);
-  return join(process.cwd(), parts.join("/"));
+  return join(process.cwd(), rel.split("/").map(desegment).join("/"));
 }
 
 async function download(key) {
   const { data, error } = await supa.storage.from("artifacts").download(key);
   if (error) throw new Error(`download failed for ${key}: ${error.message}`);
-  // Convert Blob to Buffer (Node 18+ has Blob)
-  const arrayBuffer = await data.arrayBuffer();
-  return Buffer.from(arrayBuffer);
+  const buf = Buffer.from(await data.arrayBuffer());
+  return buf;
+}
+
+async function resolveManifestKey(orc, run) {
+  if (run) return `${orc}/${run}/manifest.json`;
+  // Try refs/<orc>/latest.json
+  const latestKey = `refs/${orc}/latest.json`;
+  const latest = await supa.storage.from("artifacts").download(latestKey);
+  if (!latest.error) {
+    const { runId, manifestPath } = JSON.parse(await latest.data.text());
+    return manifestPath
+      ? manifestPath.replace(/^artifacts\//, "")
+      : `${orc}/${runId}/manifest.json`;
+  }
+  // Fallback for legacy: <orc>/manifest.json
+  return `${orc}/manifest.json`;
 }
 
 (async function main() {
-  const manifestKey = `${ORC}/manifest.json`;
-  const { data: manifestBlob, error: mErr } = await supa.storage
-    .from("artifacts")
-    .download(manifestKey);
-  if (mErr) {
+  const manifestKey = await resolveManifestKey(ORC, RUN);
+  const m = await supa.storage.from("artifacts").download(manifestKey);
+  if (m.error) {
     console.error(
-      `Unable to download manifest ${manifestKey}: ${mErr.message}`,
+      `Unable to download manifest ${manifestKey}: ${m.error.message}`,
     );
     process.exit(1);
   }
-  const manifest = JSON.parse(await manifestBlob.text());
+  const manifest = JSON.parse(await m.data.text());
 
   console.log(
-    `Materializing ${manifest.files.length} file(s) from orchestration ${manifest.orchestrationId} …`,
+    `Materializing ${manifest.files.length} file(s) from orchestration ${manifest.orchestrationId}${manifest.runId ? " / " + manifest.runId : ""} …`,
   );
   let wrote = 0;
 
