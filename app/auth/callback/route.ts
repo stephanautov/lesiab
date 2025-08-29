@@ -1,6 +1,6 @@
 // path: app/auth/callback/route.ts
 import { NextResponse } from "next/server";
-import { getSupabaseServer } from "../../../lib/auth";
+import { getSupabaseServer } from "../../../lib/auth-server";
 
 export const runtime = "nodejs";
 

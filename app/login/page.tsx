@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { getSupabaseBrowser } from "../../lib/auth";
+import { getSupabaseBrowser } from "../../lib/auth-client";
 
 export default function LoginPage() {
   const supabase = React.useMemo(() => getSupabaseBrowser(), []);

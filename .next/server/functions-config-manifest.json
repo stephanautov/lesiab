@@ -1,7 +1,8 @@
 {
   "version": 1,
   "functions": {
+    "/api/trpc/[trpc]": {},
     "/api/public/health": {},
-    "/api/trpc/[trpc]": {}
+    "/auth/callback": {}
   }
 }

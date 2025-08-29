@@ -5,7 +5,7 @@ import {
   getServiceSupabase,
   getAccessTokenFromRequest,
   getUserServer,
-} from "../../lib/auth";
+} from "../../lib/auth-server";
 
 export type CreateContextOptions = { req: Request };
 
