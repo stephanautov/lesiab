@@ -27,7 +27,9 @@ export const postsRouter = createTRPCRouter({
 
   // Auth required to create
   create: protectedProcedure
-    .input(z.object({ title: z.string().min(1), content: z.string().optional() }))
+    .input(
+      z.object({ title: z.string().min(1), content: z.string().optional() }),
+    )
     .mutation(async ({ ctx, input }) => {
       const { error, data } = await ctx.supabase
         .from("posts")

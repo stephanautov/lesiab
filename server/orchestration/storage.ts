@@ -9,30 +9,18 @@ function toPosixPath(p: string) {
 function stripArtifactsPrefix(p: string) {
   return p.replace(/^artifacts\/+/, "");
 }
+function sanitizeSegment(seg: string) {
+  return seg.replace(/\s+/g, "-").replace(/[\[\]\?#&<>:"%\\{}|\^~`]/g, "_");
+}
 function sanitizeKey(p: string) {
-  // 1) normalize to posix & remove artifacts/ prefix
   let key = toPosixPath(stripArtifactsPrefix(p)).trim();
-
-  // 2) remove leading/trailing slashes
   key = key.replace(/^\/+|\/+$/g, "");
-
-  // 3) collapse ".." and "." segments naïvely
   key = key
     .split("/")
-    .filter((seg) => seg !== "." && seg !== ".." && seg !== "")
+    .filter((s) => s && s !== "." && s !== "..")
+    .map(sanitizeSegment)
     .join("/");
-
-  // 4) replace problematic chars per segment (keep a-zA-Z0-9 / . _ -)
-  key = key
-    .split("/")
-    .map(
-      (seg) =>
-        seg.replace(/\s+/g, "-").replace(/[\[\]\?#&<>:"%\\{}|\^~`]/g, "_"), // ← brackets and other risky chars
-    )
-    .join("/");
-
   if (!key) key = "artifact";
-  // avoid insanely long keys
   if (key.length > 900) key = key.slice(0, 900);
   return key;
 }
@@ -64,14 +52,13 @@ function inferContentType(key: string, isString: boolean) {
   return isString ? "text/plain; charset=utf-8" : "application/octet-stream";
 }
 
-export function createArtifactStorage(orchestrationId: OrchestrationId) {
+export function createArtifactStorage(
+  orchestrationId: OrchestrationId,
+  runId?: string,
+) {
   const url = process.env.SUPABASE_URL!;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE!;
-  if (!url || !serviceKey) {
-    throw new Error(
-      "Supabase credentials missing: set SUPABASE_URL and SUPABASE_SERVICE_ROLE",
-    );
-  }
+  if (!url || !serviceKey) throw new Error("Supabase credentials missing");
 
   const supa = createClient(url, serviceKey, {
     auth: { persistSession: false },
@@ -89,8 +76,15 @@ export function createArtifactStorage(orchestrationId: OrchestrationId) {
   return {
     async saveArtifact(path: string, content: string | Uint8Array) {
       await ensureBucket();
-
-      const objectKey = sanitizeKey(path);
+      // Insert runId after <orc>/ if provided: artifacts/<orc>/<runId>/...
+      const stripped = stripArtifactsPrefix(path);
+      const withRun = stripped.replace(
+        new RegExp(`^${orchestrationId}/`),
+        runId
+          ? `${orchestrationId}/${sanitizeSegment(runId)}/`
+          : `${orchestrationId}/`,
+      );
+      const objectKey = sanitizeKey(withRun);
       const data =
         typeof content === "string"
           ? new TextEncoder().encode(content)
@@ -99,7 +93,6 @@ export function createArtifactStorage(orchestrationId: OrchestrationId) {
         objectKey,
         typeof content === "string",
       );
-
       const { error } = await supa.storage
         .from("artifacts")
         .upload(objectKey, data, {
@@ -109,7 +102,7 @@ export function createArtifactStorage(orchestrationId: OrchestrationId) {
       if (error) {
         if (/signature verification failed/i.test(error.message)) {
           throw new Error(
-            "Supabase Storage auth failed: check SUPABASE_URL and SUPABASE_SERVICE_ROLE belong to the same project (and are set in this Vercel environment).",
+            "Supabase Storage auth failed: check SUPABASE_URL and SUPABASE_SERVICE_ROLE.",
           );
         }
         throw new Error(

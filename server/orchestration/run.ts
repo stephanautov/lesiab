@@ -1,18 +1,12 @@
 // path: server/orchestration/run.ts
-// Minimal orchestrator runner: wires nodes, persists artifacts via Supabase Storage,
-// and executes a fixed plan. Accepts description + optional questionnaire answers.
-
 import crypto from "node:crypto";
-import type { ArtifactStorage } from "./storage";
 import { createArtifactStorage } from "./storage";
-
 export type ExecutionContext = {
   orchestrationId: string;
   correlationId: string;
   logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: ArtifactStorage;
+  storage: ReturnType<typeof createArtifactStorage>;
 };
-
 export type NodeSpec<I = unknown, O = unknown> = {
   id: string;
   phase:
@@ -24,11 +18,9 @@ export type NodeSpec<I = unknown, O = unknown> = {
     | "codeGeneration"
     | "integrate"
     | "finalize";
-  estimate?: (input: I) => { tokens?: number; usd?: number };
   run: (input: I, ctx: ExecutionContext) => Promise<O>;
 };
 
-// Dynamic node loader map (add/remove as your repo grows)
 async function loadNode(id: string): Promise<NodeSpec<any, any> | null> {
   const map: Record<string, () => Promise<any>> = {
     "profile.normalize": () => import("../../nodes/profile.normalize"),
@@ -43,33 +35,47 @@ async function loadNode(id: string): Promise<NodeSpec<any, any> | null> {
     "ai.embedder": () => import("../../nodes/ai.embedder"),
     "realtime.client": () => import("../../nodes/realtime.client"),
     "ui.screens": () => import("../../nodes/ui.screens"),
+    "materialize.repo": () => import("../../nodes/materialize.repo"),
     "vercel.config": () => import("../../nodes/vercel.config"),
     "monitoring.basics": () => import("../../nodes/monitoring.basics"),
     "github.setup": () => import("../../nodes/github.setup"),
     "deploy.docs": () => import("../../nodes/deploy.docs"),
   };
-  const loader = map[id];
-  if (!loader) return null;
   try {
-    const mod = await loader();
+    const mod = await (map[id]?.() ?? Promise.reject());
     return (mod.default || Object.values(mod)[0]) as NodeSpec<any, any>;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
 
-function stableId(s: string) {
+function sha12(obj: unknown) {
   return crypto
     .createHash("sha256")
-    .update(s || "app", "utf8")
+    .update(JSON.stringify(obj))
     .digest("hex")
     .slice(0, 12);
 }
+function newRunId() {
+  const iso = new Date().toISOString().replace(/:/g, "_");
+  const nonce = Math.random().toString(36).slice(2, 8);
+  return `${iso}-${nonce}`;
+}
 
-export async function runOrchestration(description: string, answers?: unknown) {
-  const orchestrationId = stableId(description);
-  const storage = createArtifactStorage(orchestrationId);
+export async function runOrchestration(
+  description: string,
+  answers?: unknown,
+  mode: "deterministic" | "unique" = "deterministic",
+) {
+  // Deterministic orc id derived from description + answers (so content changes → new orc)
+  const orchestrationId = sha12({ description, answers });
+  // Each run gets its own subfolder
+  const runId =
+    mode === "unique"
+      ? `${sha12({ t: Date.now(), r: Math.random() })}`
+      : newRunId();
 
+  const storage = createArtifactStorage(orchestrationId, runId);
   const ctx: ExecutionContext = {
     orchestrationId,
     correlationId: orchestrationId,
@@ -81,7 +87,6 @@ export async function runOrchestration(description: string, answers?: unknown) {
     storage,
   };
 
-  // Fixed plan. Missing nodes are skipped with a warning.
   const plan: string[] = [
     "profile.normalize",
     "trpc.server",
@@ -111,23 +116,14 @@ export async function runOrchestration(description: string, answers?: unknown) {
       continue;
     }
 
-    // Thread the richer input only into profile.normalize.
-    // Keep the original compatibility: string input OR { description, answers }.
     let input: unknown = {};
-    if (id === "profile.normalize") {
+    if (id === "profile.normalize")
       input = answers ? { description, answers } : description;
-    }
-    if (id === "materialize.repo") {
-      input = { files };
-    }
+    if (id === "materialize.repo") input = { files, runId };
 
     ctx.logger.info({ msg: "node.start", id });
     const out: any = await node.run(input as any, ctx);
-
-    // Convention: nodes may return { files: string[] }
-    if (out && Array.isArray(out.files)) {
-      files.push(...out.files);
-    }
+    if (out && Array.isArray(out.files)) files.push(...out.files);
     ctx.logger.info({
       msg: "node.done",
       id,
@@ -135,5 +131,5 @@ export async function runOrchestration(description: string, answers?: unknown) {
     });
   }
 
-  return { orchestrationId, files };
+  return { orchestrationId, runId, files };
 }

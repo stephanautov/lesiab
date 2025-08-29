@@ -65,7 +65,7 @@ function stableStringify(obj: unknown) {
   return JSON.stringify(sort(obj), null, 2) + "\n";
 }
 
-type Input = { files?: string[] };
+type Input = { files?: string[]; runId?: string };
 
 const MaterializeRepoNode: NodeSpec<
   Input,
@@ -73,26 +73,24 @@ const MaterializeRepoNode: NodeSpec<
 > = {
   id: "materialize.repo",
   phase: "integrate",
-  async run(input, ctx: ExecutionContext) {
-    const all = Array.isArray(input?.files) ? input!.files : [];
-    // Only repo files are applied to workspace; others (README, ci.yml) can also be materialized,
-    // but keeping scope to repo/** keeps it predictable.
-    const repoFiles = all.filter((p) => p.startsWith("repo/"));
+  async run(input, ctx) {
+    const repoFiles = (input?.files ?? []).filter((p) => p.startsWith("repo/"));
+    const runId = input?.runId ? `/${input.runId}` : "";
 
     const entries = repoFiles.map((originalPath) => {
       const storageKey = sanitizeKey(
-        `artifacts/${ctx.orchestrationId}/${originalPath}`,
+        `artifacts/${ctx.orchestrationId}${runId}/${originalPath}`,
       );
       return { originalPath, storageKey };
     });
 
     const manifest = {
       orchestrationId: ctx.orchestrationId,
-      generatedAt: new Date().toISOString(),
+      runId: input?.runId ?? null,
       files: entries,
     };
 
-    const manifestPath = `artifacts/${ctx.orchestrationId}/manifest.json`;
+    const manifestPath = `artifacts/${ctx.orchestrationId}${runId}/manifest.json`;
     await ctx.storage.saveArtifact(manifestPath, stableStringify(manifest));
     ctx.logger.info({
       msg: "materialize.repo:manifest_written",

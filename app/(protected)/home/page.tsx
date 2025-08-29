@@ -25,6 +25,11 @@ export default function HomePage() {
               Uploads
             </Link>
           </li>
+          <li>
+            <Link className="underline underline-offset-2" href="/login">
+              Login
+            </Link>
+          </li>
         </ul>
       </div>
 

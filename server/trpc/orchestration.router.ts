@@ -5,7 +5,6 @@ import { runOrchestration } from "../orchestration/run";
 import ProfileNormalizeNode from "../../nodes/profile.normalize";
 import { createArtifactStorage } from "../orchestration/storage";
 
-/** Keep this schema aligned with the node's QuestionnaireSchema */
 const AnswersSchema = z
   .object({
     targets: z.enum(["mobile", "desktop", "both"]).default("both"),
@@ -35,8 +34,16 @@ const AnswersSchema = z
   })
   .strict();
 
+const ModeSchema = z.enum(["deterministic", "unique"]).default("deterministic");
+
+function newRunId() {
+  // e.g. 2025-08-29T01_12_33Z-7hw3fj
+  const iso = new Date().toISOString().replace(/:/g, "_");
+  const nonce = Math.random().toString(36).slice(2, 8);
+  return `${iso}-${nonce}`;
+}
+
 export const orchestrationRouter = createTRPCRouter({
-  /** Preview only runs profile.normalize to show the proposed profile.json */
   preview: publicProcedure
     .input(
       z.object({
@@ -47,37 +54,35 @@ export const orchestrationRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const orchestrationId =
         "preview-" + Math.random().toString(36).slice(2, 8);
-      const storage = createArtifactStorage(orchestrationId);
-
+      const runId = newRunId();
+      const storage = createArtifactStorage(orchestrationId, runId);
       const ctx = {
         orchestrationId,
         correlationId: orchestrationId,
         logger: { info: () => {}, warn: () => {}, error: () => {} },
         storage,
       } as const;
-
-      // Call the node directly with { description, answers }
       const out = await ProfileNormalizeNode.run(
         { description: input.description, answers: input.answers },
         ctx as any,
       );
-
-      return { orchestrationId, profile: out.profile };
+      return { orchestrationId, runId, profile: out.profile };
     }),
 
-  /** Start the full plan and return artifact list + orchestration id */
   start: publicProcedure
     .input(
       z.object({
         description: z.string().min(5),
         answers: AnswersSchema.optional(),
+        mode: ModeSchema.optional(),
       }),
     )
     .mutation(async ({ input }) => {
-      const { orchestrationId, files } = await runOrchestration(
+      const res = await runOrchestration(
         input.description,
         input.answers,
+        input.mode ?? "deterministic",
       );
-      return { orchestrationId, files };
+      return res; // { orchestrationId, runId, files }
     }),
 });
