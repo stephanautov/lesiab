@@ -1,16 +1,15 @@
-/* path: app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Design tokens (light) */
+/* light theme tokens */
 :root {
-  --bg: 250 250 250; /* neutral-50 */
-  --fg: 20 20 20; /* near-black */
-  --muted: 115 115 115; /* neutral-500 */
-  --card: 255 255 255; /* white */
-  --border: 230 230 230; /* neutral-200 */
-  --ring: 17 24 39; /* slate-900 */
+  --bg: 250 250 250;
+  --fg: 20 20 20;
+  --muted: 115 115 115;
+  --card: 255 255 255;
+  --border: 230 230 230;
+  --ring: 17 24 39;
   --radius: 14px;
 }
 
@@ -25,71 +24,97 @@ html {
   color-scheme: light;
 }
 
-/* Base typography & smoothing */
+/* Base typography & smoothing (no @apply leading-6) */
 body {
-  @apply text-[15px] leading-6;
   color: rgb(var(--fg));
   background: rgb(var(--bg));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
-/* App chrome */
+/* Helpers used across pages */
 .container-page {
-  @apply mx-auto max-w-5xl px-4 py-8;
+  margin: 0 auto;
+  max-width: 64rem;
+  padding: 2rem 1rem;
 }
-
 .card {
-  @apply rounded-2xl border bg-white shadow-sm;
-  border-color: rgb(var(--border));
+  border-radius: 1rem;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--card));
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.06),
+    0 1px 3px rgba(16, 24, 40, 0.1);
 }
-
 .card-header {
-  @apply border-b px-5 py-3 bg-gradient-to-r from-neutral-50 to-white;
-  border-color: rgb(var(--border));
+  border-bottom: 1px solid rgb(var(--border));
+  padding: 0.75rem 1.25rem;
+  background-image: linear-gradient(to right, #fafafa, #fff);
 }
-
 .card-title {
-  @apply text-sm font-medium tracking-wide text-neutral-700;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #404040;
 }
 
-/* Buttons (lightweight, not replacing shadcn) */
 .btn {
-  @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium border transition;
-  border-color: rgb(var(--border));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 0.75rem;
+  border: 1px solid rgb(var(--border));
+  transition: background 0.15s ease;
 }
 .btn:hover {
-  @apply bg-neutral-50;
+  background: #f5f5f5;
 }
 .btn-primary {
-  @apply bg-black text-white border-black;
+  background: #000;
+  color: #fff;
+  border-color: #000;
 }
 .btn-primary:hover {
-  @apply opacity-90;
+  opacity: 0.9;
 }
 .btn-xs {
-  @apply px-3 py-1.5 text-xs rounded-md;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+  border-radius: 0.5rem;
 }
 
-/* Forms */
 .input,
 .select,
 .textarea {
-  @apply w-full rounded-lg border px-3 py-2 text-sm bg-white;
-  border-color: rgb(var(--border));
+  width: 100%;
+  border: 1px solid rgb(var(--border));
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  background: #fff;
 }
 .textarea {
-  @apply min-h-[140px];
+  min-height: 140px;
 }
 
-/* Code blocks */
 pre {
-  @apply overflow-x-auto rounded-lg bg-neutral-50 p-3 text-xs leading-relaxed;
+  overflow-x: auto;
   border: 1px solid rgb(var(--border));
+  background: #fafafa;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
 }
-
-/* Small utilities */
 .kbd {
-  @apply rounded border bg-white px-1.5 py-0.5 text-[11px];
-  border-color: rgb(var(--border));
+  border: 1px solid rgb(var(--border));
+  background: #fff;
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.4rem;
+  font-size: 0.7rem;
 }
