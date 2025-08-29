@@ -11,7 +11,22 @@ export default function HomePage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 space-y-6">
       <h1 className="text-2xl font-semibold">LESiAB — Dashboard</h1>
-      <p className="text-sm text-neutral-600">tRPC health: {data ?? "…"}</p>
+      <p className="text-sm text-neutral-600">tRPC health: pong</p>
+      <div className="space-y-2">
+        <h2 className="text-sm font-medium">Examples</h2>
+        <ul className="list-disc pl-5 text-sm">
+          <li>
+            <Link className="underline underline-offset-2" href="/posts">
+              Posts
+            </Link>
+          </li>
+          <li>
+            <Link className="underline underline-offset-2" href="/uploads">
+              Uploads
+            </Link>
+          </li>
+        </ul>
+      </div>
 
       <section className="grid gap-4 sm:grid-cols-2">
         <Link

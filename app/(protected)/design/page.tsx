@@ -222,6 +222,14 @@ export default function DesignPage() {
                 Artifacts are saved to Supabase Storage bucket{" "}
                 <code>artifacts</code>.
               </p>
+              <div className="mt-3">
+                <a
+                  href="/posts"
+                  className="text-sm underline underline-offset-2"
+                >
+                  Go to Posts →
+                </a>
+              </div>
             </Section>
           ) : null}
 

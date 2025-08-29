@@ -1,0 +1,16 @@
+{
+  "audience": "non-technical founders, creatives, tech enthusiasts, and developer hobbyists",
+  "business": {
+    "isBusiness": true,
+    "model": "subscription"
+  },
+  "downloads": {
+    "enabled": true,
+    "types": ["audio", "code", "image", "text", "pdf", "video"]
+  },
+  "targets": "both",
+  "uploads": {
+    "enabled": true,
+    "types": ["audio", "code", "image", "text", "pdf", "video"]
+  }
+}

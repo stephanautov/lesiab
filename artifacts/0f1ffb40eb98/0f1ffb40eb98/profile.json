@@ -1,0 +1,52 @@
+{
+  "entities": [
+    {
+      "fields": [
+        {
+          "dbType": "uuid",
+          "name": "id",
+          "pk": true,
+          "required": true
+        },
+        {
+          "dbType": "text",
+          "name": "title",
+          "required": true
+        },
+        {
+          "dbType": "text",
+          "name": "content",
+          "required": false
+        },
+        {
+          "dbType": "timestamp",
+          "name": "created_at",
+          "required": true
+        }
+      ],
+      "name": "posts",
+      "realtime": false,
+      "storageBuckets": [],
+      "table": "posts",
+      "vectorSearch": false
+    }
+  ],
+  "id": "app",
+  "llm": {
+    "providerPreference": "openai",
+    "useLangGraph": true
+  },
+  "routes": [
+    {
+      "entity": "posts",
+      "path": "/posts",
+      "type": "list"
+    },
+    {
+      "entity": "posts",
+      "path": "/posts/:id",
+      "type": "detail"
+    }
+  ],
+  "version": "1.0.0"
+}
