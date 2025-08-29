@@ -1,17 +1,33 @@
 // path: scripts/materialize-from-storage.mjs
 import { createClient } from "@supabase/supabase-js";
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-const [, , ORC, RUN] = process.argv;
+let [, , ORC, RUN] = process.argv;
+
+// NEW: if no args, read local pointer
+if (!ORC) {
+  try {
+    const json = JSON.parse(await readFile(".lesiab-latest.json", "utf8"));
+    ORC = json.orchestrationId;
+    RUN = json.runId;
+    console.log(`Using .lesiab-latest.json → ${ORC}${RUN ? " / " + RUN : ""}`);
+  } catch {
+    console.error(
+      "Provide <orchId> [runId], or create .lesiab-latest.json via `pnpm lesiab:write-latest -- <orc> <runId>`",
+    );
+    process.exit(1);
+  }
+}
+
 if (!ORC) {
   console.error(
-    "Usage: SUPABASE_URL=... SUPABASE_SERVICE_ROLE=... node scripts/materialize-from-storage.mjs <orchestrationId> [runId] [--dry]",
+    "Usage: SUPABASE_URL=... SUPABASE_SERVICE_ROLE=... node scripts/materialize-from-storage.mjs <orchId> [runId]",
   );
   process.exit(1);
 }
-const DRY = process.argv.includes("--dry");
 
+const DRY = process.argv.includes("--dry");
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE;
 if (!url || !key) {
@@ -38,7 +54,6 @@ async function download(key) {
 
 async function resolveManifestKey(orc, run) {
   if (run) return `${orc}/${run}/manifest.json`;
-  // Try refs/<orc>/latest.json
   const latestKey = `refs/${orc}/latest.json`;
   const latest = await supa.storage.from("artifacts").download(latestKey);
   if (!latest.error) {
@@ -47,7 +62,6 @@ async function resolveManifestKey(orc, run) {
       ? manifestPath.replace(/^artifacts\//, "")
       : `${orc}/${runId}/manifest.json`;
   }
-  // Fallback for legacy: <orc>/manifest.json
   return `${orc}/manifest.json`;
 }
 
