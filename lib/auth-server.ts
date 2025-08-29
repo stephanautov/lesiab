@@ -16,11 +16,31 @@ export function getServiceSupabase(): SupabaseClient {
 /** Extract sb-access-token from a Request's Cookie header (no Next APIs). */
 export function getAccessTokenFromRequest(req: Request): string | undefined {
   const cookieHeader = req.headers.get("cookie") ?? "";
-  const match = cookieHeader
-    .split(/;\s*/)
-    .find((c) => c.startsWith("sb-access-token="));
-  if (!match) return undefined;
-  return decodeURIComponent(match.split("=")[1] ?? "");
+  if (!cookieHeader) return undefined;
+
+  // Parse cookie string → map
+  const map = Object.create(null) as Record<string, string>;
+  for (const part of cookieHeader.split(/;\s*/)) {
+    if (!part) continue;
+    const i = part.indexOf("=");
+    if (i === -1) continue;
+    const k = decodeURIComponent(part.slice(0, i));
+    const v = decodeURIComponent(part.slice(i + 1));
+    map[k] = v;
+  }
+  // Old default name
+  if (map["sb-access-token"]) return map["sb-access-token"];
+
+  // Newer SSR helper names include the project ref in the cookie key.
+  // Example: sb-abc123-access-token
+  const ref = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(
+    /https:\/\/([^.]+)\.supabase\.co/,
+  )?.[1];
+  if (ref && map[`sb-${ref}-access-token`])
+    return map[`sb-${ref}-access-token`];
+
+  // Some setups use a consolidated "sb-auth-token" JSON value; ignore here to keep it simple.
+  return undefined;
 }
 
 /** Optional token verification round-trip using the Admin client. */

@@ -3,19 +3,14 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "../../../../server/trpc/router";
 import { createTRPCContext } from "../../../../server/trpc/context";
 
-// Keep tRPC on the Node.js runtime (REST public endpoints handle edge/CDN).
-export const runtime = "nodejs";
+export const runtime = "nodejs"; // or "edge" is also fine
 
 const handler = (req: Request) =>
   fetchRequestHandler({
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    createContext: ({ req }) => createTRPCContext({ req }),
-    onError({ error: _error, path: _path }) {
-      // Optional: basic logging hook (kept deterministic)
-      console.error("tRPC error on", _path, _error);
-    },
+    createContext: async () => createTRPCContext({ req } as any),
   });
 
 export { handler as GET, handler as POST };

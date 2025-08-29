@@ -7,7 +7,7 @@ export const uploadsRouter = createTRPCRouter({
   createUrl: protectedProcedure
     .input(z.object({ filename: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.userId;
+      const userId = ctx.user.id;
       if (!userId) throw new Error("Unauthorized");
       const { path, url } = await createPresignedUploadUrl(
         userId,
