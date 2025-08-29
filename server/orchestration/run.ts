@@ -1,6 +1,7 @@
 // path: server/orchestration/run.ts
-// Minimal runner that wires your NodeSpecs and executes a fixed plan.
-// Uses Supabase Storage for artifacts and returns the file list.
+// Minimal orchestrator runner: wires nodes, persists artifacts via Supabase Storage,
+// and executes a fixed plan. Accepts description + optional questionnaire answers.
+
 import crypto from "node:crypto";
 import type { ArtifactStorage } from "./storage";
 import { createArtifactStorage } from "./storage";
@@ -27,9 +28,10 @@ export type NodeSpec<I = unknown, O = unknown> = {
   run: (input: I, ctx: ExecutionContext) => Promise<O>;
 };
 
-// Try to load a node dynamically (safe on Vercel Node runtime)
+// Dynamic node loader map (add/remove as your repo grows)
 async function loadNode(id: string): Promise<NodeSpec<any, any> | null> {
   const map: Record<string, () => Promise<any>> = {
+    "profile.normalize": () => import("../../nodes/profile.normalize"),
     "trpc.server": () => import("../../nodes/trpc.server"),
     "rest.public": () => import("../../nodes/rest.public"),
     "trpc.client": () => import("../../nodes/trpc.client"),
@@ -45,25 +47,27 @@ async function loadNode(id: string): Promise<NodeSpec<any, any> | null> {
     "monitoring.basics": () => import("../../nodes/monitoring.basics"),
     "github.setup": () => import("../../nodes/github.setup"),
     "deploy.docs": () => import("../../nodes/deploy.docs"),
-    // Optional (include if you have it):
-    "profile.normalize": () => import("../../nodes/profile.normalize"),
   };
   const loader = map[id];
   if (!loader) return null;
   try {
     const mod = await loader();
     return (mod.default || Object.values(mod)[0]) as NodeSpec<any, any>;
-  } catch {
+  } catch (e) {
     return null;
   }
 }
 
 function stableId(s: string) {
-  return crypto.createHash("sha256").update(s, "utf8").digest("hex").slice(0, 12);
+  return crypto
+    .createHash("sha256")
+    .update(s || "app", "utf8")
+    .digest("hex")
+    .slice(0, 12);
 }
 
-export async function runOrchestration(description: string) {
-  const orchestrationId = stableId(description || "app");
+export async function runOrchestration(description: string, answers?: unknown) {
+  const orchestrationId = stableId(description);
   const storage = createArtifactStorage(orchestrationId);
 
   const ctx: ExecutionContext = {
@@ -77,9 +81,9 @@ export async function runOrchestration(description: string) {
     storage,
   };
 
-  // Fixed plan (skip gracefully if a node is missing)
-  const plan = [
-    "profile.normalize", // optional, if present it will emit profile.json
+  // Fixed plan. Missing nodes are skipped with a warning.
+  const plan: string[] = [
+    "profile.normalize",
     "trpc.server",
     "rest.public",
     "trpc.client",
@@ -98,18 +102,33 @@ export async function runOrchestration(description: string) {
   ];
 
   const files: string[] = [];
+
   for (const id of plan) {
     const node = await loadNode(id);
     if (!node) {
       ctx.logger.warn({ msg: "node.missing", id });
       continue;
     }
-    const input = id === "profile.normalize" ? { text: description } : {};
+
+    // Thread the richer input only into profile.normalize.
+    // Keep the original compatibility: string input OR { description, answers }.
+    let input: unknown = {};
+    if (id === "profile.normalize") {
+      input = answers ? { description, answers } : description;
+    }
+
     ctx.logger.info({ msg: "node.start", id });
-    const out: any = await node.run(input, ctx);
-    const produced = Array.isArray(out?.files) ? out.files : [];
-    files.push(...produced);
-    ctx.logger.info({ msg: "node.done", id, produced });
+    const out: any = await node.run(input as any, ctx);
+
+    // Convention: nodes may return { files: string[] }
+    if (out && Array.isArray(out.files)) {
+      files.push(...out.files);
+    }
+    ctx.logger.info({
+      msg: "node.done",
+      id,
+      produced: Array.isArray(out?.files) ? out.files : [],
+    });
   }
 
   return { orchestrationId, files };

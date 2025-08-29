@@ -3459,13 +3459,11 @@
               this.#m.setOptions(this.options),
               t._defaulted &&
                 !(0, s.f8)(this.options, t) &&
-                this.#s
-                  .getQueryCache()
-                  .notify({
-                    type: "observerOptionsUpdated",
-                    query: this.#m,
-                    observer: this,
-                  }));
+                this.#s.getQueryCache().notify({
+                  type: "observerOptionsUpdated",
+                  query: this.#m,
+                  observer: this,
+                }));
             let n = this.hasListeners();
             (n && eW(this.#m, r, this.options, t) && this.#C(),
               this.updateResult(),
@@ -3919,13 +3917,11 @@
             let t = this.options;
             ((this.options = this.#s.defaultMutationOptions(e)),
               (0, s.f8)(this.options, t) ||
-                this.#s
-                  .getMutationCache()
-                  .notify({
-                    type: "observerOptionsUpdated",
-                    mutation: this.#A,
-                    observer: this,
-                  }),
+                this.#s.getMutationCache().notify({
+                  type: "observerOptionsUpdated",
+                  mutation: this.#A,
+                  observer: this,
+                }),
               t?.mutationKey &&
               this.options.mutationKey &&
               (0, s.EN)(t.mutationKey) !== (0, s.EN)(this.options.mutationKey)
