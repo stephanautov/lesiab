@@ -21,6 +21,21 @@ export type NodeSpec<I = unknown, O = unknown> = {
   run: (input: I, ctx: ExecutionContext) => Promise<O>;
 };
 
+// ────────────────────────────────────────────────────────────────────────────
+// Helper: encode dynamic route segments for storage keys, e.g. [trpc] → _trpc_
+// (Matches what our materializer expects; avoids "Invalid key" errors)
+const BRACKET_SEG = /^\[(.+?)\]$/;
+function encodePathForStorage(relPath: string): string {
+  return relPath
+    .replace(/^\/+/, "")
+    .split("/")
+    .map((seg) => {
+      const m = seg.match(BRACKET_SEG);
+      return m ? `_${m[1]}_` : seg;
+    })
+    .join("/");
+}
+
 async function loadNode(id: string): Promise<NodeSpec<any, any> | null> {
   const map: Record<string, () => Promise<any>> = {
     "profile.normalize": () => import("../../nodes/profile.normalize"),
@@ -76,6 +91,21 @@ export async function runOrchestration(
       : newRunId();
 
   const storage = createArtifactStorage(orchestrationId, runId);
+  // Collect every uploaded artifact key (even if nodes don't return out.files)
+  const producedKeys: string[] = [];
+  const baseSave = storage.saveArtifact.bind(storage);
+  (storage as any).saveArtifact = async (
+    relPath: string,
+    content: string | Uint8Array,
+  ) => {
+    const res = await baseSave(relPath, content);
+    // Build the exact storage key we (and the materializer) will reference
+    const encoded = encodePathForStorage(relPath.replace(/^artifacts\/+/, ""));
+    const key = `artifacts/${orchestrationId}/${runId}/${encoded}`;
+    producedKeys.push(key);
+    return res;
+  };
+
   const ctx: ExecutionContext = {
     orchestrationId,
     correlationId: orchestrationId,
@@ -131,5 +161,27 @@ export async function runOrchestration(
     });
   }
 
-  return { orchestrationId, runId, files };
+  // ────────────────────────────────────────────────────────────────────────────
+  // Finalize: write manifest with *all* files (collected + node-reported)
+  const all = Array.from(new Set([...files, ...producedKeys])).sort();
+  const manifest = { orchestrationId, runId, files: all };
+  await storage.saveArtifact(
+    "manifest.json",
+    Buffer.from(JSON.stringify(manifest, null, 2)),
+  );
+  await storage.saveArtifact(
+    `refs/${orchestrationId}/latest.json`,
+    Buffer.from(
+      JSON.stringify(
+        {
+          runId,
+          manifestPath: `artifacts/${orchestrationId}/${runId}/manifest.json`,
+          files: all.length,
+        },
+        null,
+        2,
+      ),
+    ),
+  );
+  return { orchestrationId, runId, files: all };
 }
