@@ -1,11 +1,13 @@
 // path: app/login/page.tsx
 "use client";
-
 import * as React from "react";
 import { getSupabaseBrowser } from "../../lib/auth-client";
 
 export default function LoginPage() {
   const supabase = React.useMemo(() => getSupabaseBrowser(), []);
+  const BASE_URL =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (typeof window !== "undefined" ? window.location.origin : "");
   const [email, setEmail] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -15,7 +17,7 @@ export default function LoginPage() {
   }, [supabase]);
 
   const onGoogle = async () => {
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/")}`;
+    const redirectTo = `${BASE_URL}/auth/callback?next=${encodeURIComponent("/")}`;
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo },
