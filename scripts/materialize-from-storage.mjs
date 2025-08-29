@@ -53,7 +53,16 @@ async function download(key) {
 }
 
 async function resolveManifestKey(orc, run) {
-  if (run) return `${orc}/${run}/manifest.json`;
+  if (run) {
+    const c = [
+      `${orc}/${run}/manifest.json`,
+      `${orc}/${run}/${run}/manifest.json`,
+    ];
+    for (const k of c) {
+      const r = await supa.storage.from("artifacts").download(k);
+      if (!r.error) return k;
+    }
+  }
   const latestKey = `refs/${orc}/latest.json`;
   const latest = await supa.storage.from("artifacts").download(latestKey);
   if (!latest.error) {

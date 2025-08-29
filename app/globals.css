@@ -1,53 +1,95 @@
-/* app/globals.css */
+/* path: app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Design tokens (light) */
 :root {
-  color-scheme: light;
+  --bg: 250 250 250; /* neutral-50 */
+  --fg: 20 20 20; /* near-black */
+  --muted: 115 115 115; /* neutral-500 */
+  --card: 255 255 255; /* white */
+  --border: 230 230 230; /* neutral-200 */
+  --ring: 17 24 39; /* slate-900 */
+  --radius: 14px;
+}
 
-  /* CSS Variables for shadcn/ui color system */
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 84% 4.9%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 84% 4.9%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
-  --radius: 0.5rem;
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
+* {
+  min-width: 0;
 }
 html,
-body,
-#__next {
+body {
   height: 100%;
 }
+html {
+  color-scheme: light;
+}
+
+/* Base typography & smoothing */
 body {
-  margin: 0;
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Helvetica,
-    Arial,
-    "Apple Color Emoji",
-    "Segoe UI Emoji";
+  @apply text-[15px] leading-6;
+  color: rgb(var(--fg));
+  background: rgb(var(--bg));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* App chrome */
+.container-page {
+  @apply mx-auto max-w-5xl px-4 py-8;
+}
+
+.card {
+  @apply rounded-2xl border bg-white shadow-sm;
+  border-color: rgb(var(--border));
+}
+
+.card-header {
+  @apply border-b px-5 py-3 bg-gradient-to-r from-neutral-50 to-white;
+  border-color: rgb(var(--border));
+}
+
+.card-title {
+  @apply text-sm font-medium tracking-wide text-neutral-700;
+}
+
+/* Buttons (lightweight, not replacing shadcn) */
+.btn {
+  @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium border transition;
+  border-color: rgb(var(--border));
+}
+.btn:hover {
+  @apply bg-neutral-50;
+}
+.btn-primary {
+  @apply bg-black text-white border-black;
+}
+.btn-primary:hover {
+  @apply opacity-90;
+}
+.btn-xs {
+  @apply px-3 py-1.5 text-xs rounded-md;
+}
+
+/* Forms */
+.input,
+.select,
+.textarea {
+  @apply w-full rounded-lg border px-3 py-2 text-sm bg-white;
+  border-color: rgb(var(--border));
+}
+.textarea {
+  @apply min-h-[140px];
+}
+
+/* Code blocks */
+pre {
+  @apply overflow-x-auto rounded-lg bg-neutral-50 p-3 text-xs leading-relaxed;
+  border: 1px solid rgb(var(--border));
+}
+
+/* Small utilities */
+.kbd {
+  @apply rounded border bg-white px-1.5 py-0.5 text-[11px];
+  border-color: rgb(var(--border));
 }
