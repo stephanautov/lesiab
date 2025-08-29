@@ -95,6 +95,7 @@ export async function runOrchestration(description: string, answers?: unknown) {
     "ai.embedder",
     "realtime.client",
     "ui.screens",
+    "materialize.repo",
     "vercel.config",
     "monitoring.basics",
     "github.setup",
@@ -115,6 +116,9 @@ export async function runOrchestration(description: string, answers?: unknown) {
     let input: unknown = {};
     if (id === "profile.normalize") {
       input = answers ? { description, answers } : description;
+    }
+    if (id === "materialize.repo") {
+      input = { files };
     }
 
     ctx.logger.info({ msg: "node.start", id });
