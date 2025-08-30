@@ -1,187 +1,270 @@
 // path: server/orchestration/run.ts
 import crypto from "node:crypto";
 import { createArtifactStorage } from "./storage";
-export type ExecutionContext = {
-  orchestrationId: string;
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Shared lightweight contracts (align EXACTLY with node expectations)
+   ──────────────────────────────────────────────────────────────────────────── */
+
+export type NodePhase =
+  | "processResponses"
+  | "analyze"
+  | "validate"
+  | "plan"
+  | "execute"
+  | "codeGeneration"
+  | "integrate"
+  | "finalize";
+
+export type NodeId = string;
+export type OrchestrationId = string;
+export type Mode = "deterministic" | "unique";
+
+export interface ExecutionLogger {
+  info(m: any): void;
+  warn(m: any): void;
+  error(m: any): void;
+}
+
+/** Must match nodes’ expectation: correlationId is REQUIRED; saveArtifact returns Promise<void> */
+export interface ExecutionContext {
+  orchestrationId: OrchestrationId;
   correlationId: string;
-  logger: { info(m: any): void; warn(m: any): void; error(m: any): void };
-  storage: ReturnType<typeof createArtifactStorage>;
-};
-export type NodeSpec<I = unknown, O = unknown> = {
-  id: string;
-  phase:
-    | "processResponses"
-    | "analyze"
-    | "validate"
-    | "plan"
-    | "execute"
-    | "codeGeneration"
-    | "integrate"
-    | "finalize";
-  run: (input: I, ctx: ExecutionContext) => Promise<O>;
-};
-
-// ────────────────────────────────────────────────────────────────────────────
-// Helper: encode dynamic route segments for storage keys, e.g. [trpc] → _trpc_
-// (Matches what our materializer expects; avoids "Invalid key" errors)
-const BRACKET_SEG = /^\[(.+?)\]$/;
-function encodePathForStorage(relPath: string): string {
-  return relPath
-    .replace(/^\/+/, "")
-    .split("/")
-    .map((seg) => {
-      const m = seg.match(BRACKET_SEG);
-      return m ? `_${m[1]}_` : seg;
-    })
-    .join("/");
-}
-
-async function loadNode(id: string): Promise<NodeSpec<any, any> | null> {
-  const map: Record<string, () => Promise<any>> = {
-    "profile.normalize": () => import("../../nodes/profile.normalize"),
-    "trpc.server": () => import("../../nodes/trpc.server"),
-    "rest.public": () => import("../../nodes/rest.public"),
-    "trpc.client": () => import("../../nodes/trpc.client"),
-    "next.app.router": () => import("../../nodes/next.app.router"),
-    "upload.direct": () => import("../../nodes/upload.direct"),
-    "ai.openai.setup": () => import("../../nodes/ai.openai.setup"),
-    "ai.anthropic.setup": () => import("../../nodes/ai.anthropic.setup"),
-    "ai.langgraph.flow": () => import("../../nodes/ai.langgraph.flow"),
-    "ai.embedder": () => import("../../nodes/ai.embedder"),
-    "realtime.client": () => import("../../nodes/realtime.client"),
-    "ui.screens": () => import("../../nodes/ui.screens"),
-    "materialize.repo": () => import("../../nodes/materialize.repo"),
-    "vercel.config": () => import("../../nodes/vercel.config"),
-    "monitoring.basics": () => import("../../nodes/monitoring.basics"),
-    "github.setup": () => import("../../nodes/github.setup"),
-    "deploy.docs": () => import("../../nodes/deploy.docs"),
+  logger: ExecutionLogger;
+  storage: {
+    saveArtifact: (
+      relPath: string,
+      content: string | Uint8Array,
+    ) => Promise<void>;
   };
-  try {
-    const mod = await (map[id]?.() ?? Promise.reject());
-    return (mod.default || Object.values(mod)[0]) as NodeSpec<any, any>;
-  } catch {
-    return null;
-  }
 }
 
-function sha12(obj: unknown) {
+export interface NodeSpec<I = unknown, O = unknown> {
+  id: NodeId;
+  phase: NodePhase;
+  estimate?: (input: I) => { tokens?: number; usd?: number };
+  run: (input: I, ctx: ExecutionContext) => Promise<O>;
+}
+
+type NodeOutputWithFiles = { files?: string[] };
+type RunResult = { orchestrationId: string; runId: string; files: string[] };
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Small helpers
+   ──────────────────────────────────────────────────────────────────────────── */
+
+function stableStringify(x: unknown) {
+  // stable stringify for hashing
+  return JSON.stringify(x, Object.keys(x as any).sort());
+}
+function sha12(x: unknown) {
   return crypto
     .createHash("sha256")
-    .update(JSON.stringify(obj))
+    .update(stableStringify(x))
     .digest("hex")
     .slice(0, 12);
 }
-function newRunId() {
-  const iso = new Date().toISOString().replace(/:/g, "_");
-  const nonce = Math.random().toString(36).slice(2, 8);
-  return `${iso}-${nonce}`;
+function newRunId(): string {
+  const iso = new Date().toISOString().replace(/[:.]/g, "_");
+  const slug = Math.random().toString(36).slice(2, 8);
+  return `${iso}-${slug}`;
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+   DAG plan + dynamic node loader (adjust paths if you move node files)
+   ──────────────────────────────────────────────────────────────────────────── */
+
+const PLAN: NodeId[] = [
+  "profile.normalize",
+
+  "trpc.server",
+  "rest.public",
+
+  "next.app.router",
+
+  "upload.direct",
+
+  "ai.openai.setup",
+  "ai.anthropic.setup",
+  "ai.langgraph.flow",
+
+  "ai.embedder",
+
+  "realtime.client",
+
+  "ui.screens",
+
+  "vercel.config",
+  "monitoring.basics",
+
+  "github.setup",
+  "deploy.docs",
+];
+
+/** Map node id → default-exported NodeSpec */
+const NODE_LOADERS: Record<NodeId, () => Promise<NodeSpec<any, any>>> = {
+  "profile.normalize": async () =>
+    (await import("../../nodes/profile.normalize")).default,
+
+  "trpc.server": async () => (await import("../../nodes/trpc.server")).default,
+  "rest.public": async () => (await import("../../nodes/rest.public")).default,
+
+  "next.app.router": async () =>
+    (await import("../../nodes/next.app.router")).default,
+
+  "upload.direct": async () =>
+    (await import("../../nodes/upload.direct")).default,
+
+  "ai.openai.setup": async () =>
+    (await import("../../nodes/ai.openai.setup")).default,
+  "ai.anthropic.setup": async () =>
+    (await import("../../nodes/ai.anthropic.setup")).default,
+  "ai.langgraph.flow": async () =>
+    (await import("../../nodes/ai.langgraph.flow")).default,
+
+  "ai.embedder": async () => (await import("../../nodes/ai.embedder")).default,
+
+  "realtime.client": async () =>
+    (await import("../../nodes/realtime.client")).default,
+
+  "ui.screens": async () => (await import("../../nodes/ui.screens")).default,
+
+  "vercel.config": async () =>
+    (await import("../../nodes/vercel.config")).default,
+  "monitoring.basics": async () =>
+    (await import("../../nodes/monitoring.basics")).default,
+
+  "github.setup": async () =>
+    (await import("../../nodes/github.setup")).default,
+  "deploy.docs": async () => (await import("../../nodes/deploy.docs")).default,
+};
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Backward-compatible API (simple positional signature used by your router)
+   ────────────────────────────────────────────────────────────────────────────
+   Callers: runOrchestration(orcId, mode, { description, answers? })
+   This function collects artifact keys (even if nodes don’t return files[])
+   and writes:
+     - artifacts/<orc>/<runId>/manifest.json
+     - artifacts/refs/<orc>/latest.json
+   without changing node contracts.
+   ──────────────────────────────────────────────────────────────────────────── */
+
 export async function runOrchestration(
-  description: string,
-  answers?: unknown,
-  mode: "deterministic" | "unique" = "deterministic",
-) {
-  // Deterministic orc id derived from description + answers (so content changes → new orc)
-  const orchestrationId = sha12({ description, answers });
-  // Each run gets its own subfolder
+  orchestrationId: string,
+  mode: Mode,
+  input: { description: string; answers?: unknown },
+): Promise<RunResult> {
+  // Resolve IDs
+  const orc: OrchestrationId =
+    orchestrationId ||
+    sha12({
+      description: input.description ?? "",
+      answers: input.answers ?? null,
+    });
   const runId =
     mode === "unique"
-      ? `${sha12({ t: Date.now(), r: Math.random() })}`
-      : newRunId();
+      ? newRunId()
+      : sha12({
+          description: input.description ?? "",
+          answers: input.answers ?? null,
+        });
 
-  const storage = createArtifactStorage(orchestrationId, runId);
-  // Collect every uploaded artifact key (even if nodes don't return out.files)
+  // Low-level storage (has saveArtifact, saveRef, buildKey)
+  const storage = createArtifactStorage(orc, runId);
+
+  // Collect exact object keys we upload to (for manifest)
   const producedKeys: string[] = [];
-  const baseSave = storage.saveArtifact.bind(storage);
-  (storage as any).saveArtifact = async (
-    relPath: string,
-    content: string | Uint8Array,
+
+  // Wrap saveArtifact to collect keys; keep the node-expected signature (Promise<void>)
+  const wrappedSave: ExecutionContext["storage"]["saveArtifact"] = async (
+    relPath,
+    content,
   ) => {
-    const res = await baseSave(relPath, content);
-    // Build the exact storage key we (and the materializer) will reference
-    const encoded = encodePathForStorage(relPath.replace(/^artifacts\/+/, ""));
-    const key = `artifacts/${orchestrationId}/${runId}/${encoded}`;
+    await storage.saveArtifact(relPath, content);
+    // Prefer builder if available, else reconstruct deterministic key
+    const key =
+      typeof storage.buildKey === "function"
+        ? storage.buildKey(relPath)
+        : `artifacts/${orc}/${runId}/${relPath.replace(/^\/+/, "")}`;
     producedKeys.push(key);
-    return res;
   };
 
+  const logger: ExecutionLogger = {
+    info: (m) => console.log("[orc]", m),
+    warn: (m) => console.warn("[orc]", m),
+    error: (m) => console.error("[orc]", m),
+  };
+
+  // Context that exactly matches what nodes were compiled against
   const ctx: ExecutionContext = {
-    orchestrationId,
-    correlationId: orchestrationId,
-    logger: {
-      info: (m) => console.log("[orc]", JSON.stringify(m)),
-      warn: (m) => console.warn("[orc]", JSON.stringify(m)),
-      error: (m) => console.error("[orc]", JSON.stringify(m)),
-    },
-    storage,
+    orchestrationId: orc,
+    correlationId: runId, // REQUIRED (string)
+    logger,
+    storage: { saveArtifact: wrappedSave },
   };
 
-  const plan: string[] = [
-    "profile.normalize",
-    "trpc.server",
-    "rest.public",
-    "trpc.client",
-    "next.app.router",
-    "upload.direct",
-    "ai.openai.setup",
-    "ai.anthropic.setup",
-    "ai.langgraph.flow",
-    "ai.embedder",
-    "realtime.client",
-    "ui.screens",
-    "materialize.repo",
-    "vercel.config",
-    "monitoring.basics",
-    "github.setup",
-    "deploy.docs",
-  ];
-
-  const files: string[] = [];
-
-  for (const id of plan) {
-    const node = await loadNode(id);
-    if (!node) {
-      ctx.logger.warn({ msg: "node.missing", id });
-      continue;
+  // Execute plan; also collect any node-reported files[]
+  const filesFromNodes: string[] = [];
+  for (const id of PLAN) {
+    try {
+      logger.info({ msg: "node.start", id });
+      const loader = NODE_LOADERS[id];
+      if (!loader) {
+        logger.warn({ msg: "node.loader_missing", id });
+        continue;
+      }
+      const node = await loader();
+      const out = (await node.run(input, ctx)) as
+        | NodeOutputWithFiles
+        | undefined;
+      if (out?.files?.length) filesFromNodes.push(...out.files);
+      logger.info({ msg: "node.done", id, produced: out?.files ?? [] });
+    } catch (err: any) {
+      logger.error({
+        msg: "node.error",
+        id,
+        error: err?.message ?? String(err),
+      });
+      // MVP: keep going so one failed node doesn’t stop others
     }
-
-    let input: unknown = {};
-    if (id === "profile.normalize")
-      input = answers ? { description, answers } : description;
-    if (id === "materialize.repo") input = { files, runId };
-
-    ctx.logger.info({ msg: "node.start", id });
-    const out: any = await node.run(input as any, ctx);
-    if (out && Array.isArray(out.files)) files.push(...out.files);
-    ctx.logger.info({
-      msg: "node.done",
-      id,
-      produced: Array.isArray(out?.files) ? out.files : [],
-    });
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Finalize: write manifest with *all* files (collected + node-reported)
-  const all = Array.from(new Set([...files, ...producedKeys])).sort();
-  const manifest = { orchestrationId, runId, files: all };
-  await storage.saveArtifact(
+  // Finalize manifest: union(node-reported, collected-by-wrapper)
+  const allKeys = Array.from(
+    new Set([...filesFromNodes, ...producedKeys]),
+  ).sort();
+
+  // Write manifest into the RUN folder
+  await wrappedSave(
     "manifest.json",
-    Buffer.from(JSON.stringify(manifest, null, 2)),
+    Buffer.from(
+      JSON.stringify({ orchestrationId: orc, runId, files: allKeys }, null, 2),
+    ),
   );
-  await storage.saveArtifact(
-    `refs/${orchestrationId}/latest.json`,
+
+  // Write a stable "latest" pointer OUTSIDE the run folder
+  await storage.saveRef(
+    "latest.json",
     Buffer.from(
       JSON.stringify(
         {
           runId,
-          manifestPath: `artifacts/${orchestrationId}/${runId}/manifest.json`,
-          files: all.length,
+          manifestPath: `artifacts/${orc}/${runId}/manifest.json`,
+          files: allKeys.length,
         },
         null,
         2,
       ),
     ),
   );
-  return { orchestrationId, runId, files: all };
+
+  logger.info({
+    msg: "orchestration.done",
+    orchestrationId: orc,
+    runId,
+    files: allKeys.length,
+  });
+
+  return { orchestrationId: orc, runId, files: allKeys };
 }

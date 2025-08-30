@@ -1,6 +1,8 @@
 // path: server/trpc/orchestration.router.ts
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "./_trpc";
+
+import type { Mode } from "../orchestration/run";
 import { runOrchestration } from "../orchestration/run";
 import ProfileNormalizeNode from "../../nodes/profile.normalize";
 import { createArtifactStorage } from "../orchestration/storage";
@@ -52,6 +54,7 @@ export const orchestrationRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input }) => {
+      // Preview runs are isolated/sandboxed and don’t need full DAG execution.
       const orchestrationId =
         "preview-" + Math.random().toString(36).slice(2, 8);
       const runId = newRunId();
@@ -62,10 +65,12 @@ export const orchestrationRouter = createTRPCRouter({
         logger: { info: () => {}, warn: () => {}, error: () => {} },
         storage,
       } as const;
+
       const out = await ProfileNormalizeNode.run(
         { description: input.description, answers: input.answers },
         ctx as any,
       );
+
       return { orchestrationId, runId, profile: out.profile };
     }),
 
@@ -78,11 +83,12 @@ export const orchestrationRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input }) => {
-      const res = await runOrchestration(
-        input.description,
-        input.answers,
-        input.mode ?? "deterministic",
-      );
+      // Fix: pass args in the correct order. Empty orcId ("") lets run.ts derive a stable hash.
+      const mode: Mode = input.mode ?? "deterministic";
+      const res = await runOrchestration("", mode, {
+        description: input.description,
+        answers: input.answers,
+      });
       return res; // { orchestrationId, runId, files }
     }),
 });

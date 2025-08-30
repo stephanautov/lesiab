@@ -1,116 +1,94 @@
 // path: server/orchestration/storage.ts
 import { createClient } from "@supabase/supabase-js";
+import { env } from "../../env.mjs";
 
-export type OrchestrationId = string;
+const BUCKET = "artifacts";
+const BRACKET_SEG = /^\[(.+?)\]$/;
 
-function toPosixPath(p: string) {
-  return p.replace(/\\/g, "/");
-}
-function stripArtifactsPrefix(p: string) {
-  return p.replace(/^artifacts\/+/, "");
-}
-function sanitizeSegment(seg: string) {
-  return seg.replace(/\s+/g, "-").replace(/[\[\]\?#&<>:"%\\{}|\^~`]/g, "_");
-}
-function sanitizeKey(p: string) {
-  let key = toPosixPath(stripArtifactsPrefix(p)).trim();
-  key = key.replace(/^\/+|\/+$/g, "");
-  key = key
-    .split("/")
-    .filter((s) => s && s !== "." && s !== "..")
-    .map(sanitizeSegment)
-    .join("/");
-  if (!key) key = "artifact";
-  if (key.length > 900) key = key.slice(0, 900);
-  return key;
+function encodeSegment(seg: string) {
+  const m = seg.match(BRACKET_SEG);
+  return m ? `_${m[1]}_` : seg;
 }
 
-function inferContentType(key: string, isString: boolean) {
-  const ext = key.split(".").pop()?.toLowerCase();
-  if (ext === "json") return "application/json; charset=utf-8";
-  if (ext === "md") return "text/markdown; charset=utf-8";
-  if (
-    [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "sql",
-      "sh",
-      "txt",
-      "ejs",
-      "env",
-      "toml",
-      "yaml",
-      "yml",
-      "cjs",
-      "mjs",
-    ].includes(ext ?? "")
-  ) {
-    return "text/plain; charset=utf-8";
-  }
-  return isString ? "text/plain; charset=utf-8" : "application/octet-stream";
+function encodePathSegments(p: string) {
+  return p.split("/").filter(Boolean).map(encodeSegment).join("/");
 }
 
-export function createArtifactStorage(
-  orchestrationId: OrchestrationId,
-  runId?: string,
+/**
+ * Build a normalized, idempotent key for artifacts under:
+ *   artifacts/<orc>/<runId>/<relPath>
+ *
+ * Rules:
+ * - strip any leading "artifacts/"
+ * - if path already begins with "<orc>/" or "<orc>/<runId>/", remove that prefix
+ * - encode bracketed segments: [name] -> _name_
+ */
+function buildArtifactKey(
+  orc: string,
+  runId: string | undefined,
+  relPath: string,
 ) {
-  const url = process.env.SUPABASE_URL!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE!;
-  if (!url || !serviceKey) throw new Error("Supabase credentials missing");
+  let rel = relPath.replace(/^\/+/, "").replace(/^artifacts\/+/, "");
 
-  const supa = createClient(url, serviceKey, {
-    auth: { persistSession: false },
-  });
-
-  async function ensureBucket() {
-    const { error } = await supa.storage.createBucket("artifacts", {
-      public: false,
-    });
-    if (error && !/already exists/i.test(error.message)) {
-      throw new Error(`createBucket(artifacts) failed: ${error.message}`);
+  // If rel already starts with "<orc>/..." optionally "<runId>/..."
+  if (rel.startsWith(`${orc}/`)) {
+    rel = rel.slice(`${orc}/`.length);
+    if (runId && rel.startsWith(`${runId}/`)) {
+      rel = rel.slice(runId.length + 1);
     }
   }
 
-  return {
-    async saveArtifact(path: string, content: string | Uint8Array) {
-      await ensureBucket();
-      // Insert runId after <orc>/ if provided: artifacts/<orc>/<runId>/...
-      const stripped = stripArtifactsPrefix(path);
-      const withRun = stripped.replace(
-        new RegExp(`^${orchestrationId}/`),
-        runId
-          ? `${orchestrationId}/${sanitizeSegment(runId)}/`
-          : `${orchestrationId}/`,
-      );
-      const objectKey = sanitizeKey(withRun);
-      const data =
-        typeof content === "string"
-          ? new TextEncoder().encode(content)
-          : content;
-      const contentType = inferContentType(
-        objectKey,
-        typeof content === "string",
-      );
-      const { error } = await supa.storage
-        .from("artifacts")
-        .upload(objectKey, data, {
-          upsert: true,
-          contentType,
-        });
-      if (error) {
-        if (/signature verification failed/i.test(error.message)) {
-          throw new Error(
-            "Supabase Storage auth failed: check SUPABASE_URL and SUPABASE_SERVICE_ROLE.",
-          );
-        }
-        throw new Error(
-          `Supabase upload failed (${objectKey}): ${error.message}`,
-        );
-      }
-    },
-  };
+  rel = encodePathSegments(rel);
+
+  const prefix = [orc, runId].filter(Boolean).join("/");
+  return prefix ? `${prefix}/${rel}` : `${orc}/${rel}`;
 }
 
-export type ArtifactStorage = ReturnType<typeof createArtifactStorage>;
+/**
+ * Build a normalized key for refs under:
+ *   artifacts/refs/<orc>/<relPath>
+ */
+function buildRefKey(orc: string, relPath: string) {
+  let rel = relPath
+    .replace(/^\/+/, "")
+    .replace(/^artifacts\/+/, "")
+    .replace(/^refs\/+/, "");
+  rel = encodePathSegments(rel);
+  return `refs/${orc}/${rel}`;
+}
+
+export function createArtifactStorage(orchestrationId: string, runId?: string) {
+  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE, {
+    auth: { persistSession: false },
+  });
+
+  return {
+    /** Save an artifact scoped to this orchestration/run. Returns the full storage key (with "artifacts/"). */
+    async saveArtifact(relPath: string, content: string | Uint8Array) {
+      const key = buildArtifactKey(orchestrationId, runId, relPath);
+      const { error } = await supabase.storage
+        .from(BUCKET)
+        .upload(key, content, { upsert: true });
+      if (error)
+        throw new Error(`Supabase upload failed (${key}): ${error.message}`);
+      return { key: `artifacts/${key}` };
+    },
+
+    /** Save a "ref" (pointer) outside the run folder: artifacts/refs/<orc>/<relPath> */
+    async saveRef(relPath: string, content: string | Uint8Array) {
+      const key = buildRefKey(orchestrationId, relPath);
+      const { error } = await supabase.storage
+        .from(BUCKET)
+        .upload(key, content, { upsert: true });
+      if (error)
+        throw new Error(`Supabase upload failed (${key}): ${error.message}`);
+      return { key: `artifacts/${key}` };
+    },
+
+    /** Expose the builders so callers can re-use if needed. */
+    buildKey: (relPath: string) =>
+      `artifacts/${buildArtifactKey(orchestrationId, runId, relPath)}`,
+    buildRefKey: (relPath: string) =>
+      `artifacts/${buildRefKey(orchestrationId, relPath)}`,
+  };
+}
